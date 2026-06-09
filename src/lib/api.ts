@@ -4,6 +4,81 @@
 
 const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api"
 
+// ─── Endpoints ──────────────────────────────────────────────────────────────
+
+export const ENDPOINTS = {
+  auth: {
+    login:          "/auth/login",
+    me:             "/auth/me",
+    logout:         "/auth/logout",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword:  "/auth/reset-password",
+    activate:       "/auth/activate",
+  },
+  faculties: {
+    base:   "/faculties",
+    detail: (id: string) => `/faculties/${id}`,
+  },
+  promotions: {
+    base:   "/promotions",
+    detail: (id: string) => `/promotions/${id}`,
+  },
+  courses: {
+    base:    "/courses",
+    detail:  (id: string) => `/courses/${id}`,
+    teacher: (id: string) => `/courses/${id}/teacher`,
+  },
+  schedules: {
+    base:   "/schedules",
+    detail: (id: string) => `/schedules/${id}`,
+  },
+  rooms: {
+    base:   "/rooms",
+    detail: (id: string) => `/rooms/${id}`,
+  },
+  students: {
+    base:   "/students",
+    detail: (id: string) => `/students/${id}`,
+    status: (id: string) => `/students/${id}/status`,
+  },
+  teachers: {
+    base:   "/teachers",
+    detail: (id: string) => `/teachers/${id}`,
+    titles: "/teachers/titles",
+  },
+  grades: {
+    base:   "/grades",
+    detail: (id: string) => `/grades/${id}`,
+    status: (id: string) => `/grades/${id}/status`,
+  },
+  appeals: {
+    base:    "/appeals",
+    resolve: (id: string) => `/appeals/${id}/resolve`,
+  },
+  assignments: {
+    base:   "/assignments",
+    detail: (id: string) => `/assignments/${id}`,
+  },
+  submissions: {
+    base:   "/submissions",
+    grade:  (id: string) => `/submissions/${id}/grade`,
+  },
+  resources: {
+    base:   "/resources",
+    detail: (id: string) => `/resources/${id}`,
+  },
+  announcements: {
+    base: "/announcements",
+  },
+  notifications: {
+    base:    "/notifications",
+    read:    (id: string) => `/notifications/${id}/read`,
+    readAll: "/notifications/read-all",
+  },
+} as const
+
+// ─── Client ───────────────────────────────────────────────────────────────────
+
 class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -15,7 +90,6 @@ class ApiError extends Error {
   }
 }
 
-// ApiEnvelope is the shape of every response from the Go backend.
 interface ApiEnvelope<T> {
   success: boolean
   data?: T
@@ -55,18 +129,17 @@ async function request<T>(
 
   if (res.status === 204) return undefined as T
 
-  // Auto-unwrap the Go response envelope { success, data, ... }
   const envelope = await res.json() as ApiEnvelope<T>
   if (envelope.data !== undefined) return envelope.data
   return envelope as unknown as T
 }
 
 export const api = {
-  get:    <T>(path: string, signal?: AbortSignal)         => request<T>("GET",    path, undefined, signal),
-  post:   <T>(path: string, body: unknown)                => request<T>("POST",   path, body),
-  put:    <T>(path: string, body: unknown)                => request<T>("PUT",    path, body),
-  patch:  <T>(path: string, body: unknown)                => request<T>("PATCH",  path, body),
-  delete: <T>(path: string)                               => request<T>("DELETE", path),
+  get:    <T>(path: string, signal?: AbortSignal) => request<T>("GET",    path, undefined, signal),
+  post:   <T>(path: string, body: unknown)         => request<T>("POST",   path, body),
+  put:    <T>(path: string, body: unknown)         => request<T>("PUT",    path, body),
+  patch:  <T>(path: string, body: unknown)         => request<T>("PATCH",  path, body),
+  delete: <T>(path: string)                        => request<T>("DELETE", path),
 }
 
 export { ApiError }
@@ -74,65 +147,65 @@ export { ApiError }
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export interface LoginPayload   { email: string; password: string }
-export interface LoginResponse  { token: string; user: import("@/types").User }
+export type LoginResponse = import("@/types").User
 export interface MeResponse     { user: import("@/types").User }
 
 export const authApi = {
-  login:         (payload: LoginPayload)         => api.post<LoginResponse>("/v1/auth/login", payload),
-  me:            ()                              => api.get<MeResponse>("/v1/auth/me"),
-  logout:        ()                              => api.post<void>("/v1/auth/logout", {}),
-  forgotPassword:(email: string)                 => api.post<void>("/v1/auth/forgot-password", { email }),
-  resetPassword: (token: string, password: string) =>
-    api.post<void>("/v1/auth/reset-password", { token, password }),
-  activateAccount:(token: string, password: string) =>
-    api.post<LoginResponse>("/v1/auth/activate", { token, password }),
+  login:          (payload: LoginPayload)          => api.post<LoginResponse>(ENDPOINTS.auth.login, payload),
+  me:             ()                               => api.get<MeResponse>(ENDPOINTS.auth.me),
+  logout:         ()                               => api.post<void>(ENDPOINTS.auth.logout, {}),
+  forgotPassword: (email: string)                  => api.post<void>(ENDPOINTS.auth.forgotPassword, { email }),
+  resetPassword:  (token: string, password: string) => api.post<void>(ENDPOINTS.auth.resetPassword, { token, password }),
+  activateAccount:(token: string, password: string) => api.post<LoginResponse>(ENDPOINTS.auth.activate, { token, password }),
 }
 
 // ─── Academic entities ────────────────────────────────────────────────────────
 
 export const facultyApi = {
-  list:   ()               => api.get<import("@/types").Faculty[]>("/v1/faculties"),
-  get:    (id: string)     => api.get<import("@/types").Faculty>(`/v1/faculties/${id}`),
-  create: (body: unknown)  => api.post<import("@/types").Faculty>("/v1/faculties", body),
-  update: (id: string, b: unknown) => api.put<import("@/types").Faculty>(`/v1/faculties/${id}`, b),
-  delete: (id: string)     => api.delete<void>(`/v1/faculties/${id}`),
+  list:   ()               => api.get<import("@/types").Faculty[]>(ENDPOINTS.faculties.base),
+  get:    (id: string)     => api.get<import("@/types").Faculty>(ENDPOINTS.faculties.detail(id)),
+  create: (body: unknown)  => api.post<import("@/types").Faculty>(ENDPOINTS.faculties.base, body),
+  update: (id: string, b: unknown) => api.put<import("@/types").Faculty>(ENDPOINTS.faculties.detail(id), b),
+  delete: (id: string)     => api.delete<void>(ENDPOINTS.faculties.detail(id)),
 }
 
 export const promotionApi = {
-  list:   (facultyId?: string) =>
-    api.get<import("@/types").Promotion[]>(facultyId ? `/v1/promotions?facultyId=${facultyId}` : "/v1/promotions"),
-  get:    (id: string)         => api.get<import("@/types").Promotion>(`/v1/promotions/${id}`),
-  create: (body: unknown)      => api.post<import("@/types").Promotion>("/v1/promotions", body),
-  update: (id: string, b: unknown) => api.put<import("@/types").Promotion>(`/v1/promotions/${id}`, b),
-  delete: (id: string)         => api.delete<void>(`/v1/promotions/${id}`),
+  list:   (facultyId?: string) => {
+    const qs = facultyId ? `?facultyId=${facultyId}` : ""
+    return api.get<import("@/types").Promotion[]>(`${ENDPOINTS.promotions.base}${qs}`)
+  },
+  get:    (id: string)         => api.get<import("@/types").Promotion>(ENDPOINTS.promotions.detail(id)),
+  create: (body: unknown)      => api.post<import("@/types").Promotion>(ENDPOINTS.promotions.base, body),
+  update: (id: string, b: unknown) => api.put<import("@/types").Promotion>(ENDPOINTS.promotions.detail(id), b),
+  delete: (id: string)         => api.delete<void>(ENDPOINTS.promotions.detail(id)),
 }
 
 export const courseApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Course[]>(`/v1/courses${qs}`)
+    return api.get<import("@/types").Course[]>(`${ENDPOINTS.courses.base}${qs}`)
   },
-  get:    (id: string)         => api.get<import("@/types").Course>(`/v1/courses/${id}`),
-  create: (body: unknown)      => api.post<import("@/types").Course>("/v1/courses", body),
-  update: (id: string, b: unknown) => api.put<import("@/types").Course>(`/v1/courses/${id}`, b),
-  delete: (id: string)         => api.delete<void>(`/v1/courses/${id}`),
+  get:    (id: string)         => api.get<import("@/types").Course>(ENDPOINTS.courses.detail(id)),
+  create: (body: unknown)      => api.post<import("@/types").Course>(ENDPOINTS.courses.base, body),
+  update: (id: string, b: unknown) => api.put<import("@/types").Course>(ENDPOINTS.courses.detail(id), b),
+  delete: (id: string)         => api.delete<void>(ENDPOINTS.courses.detail(id)),
   assignTeacher: (courseId: string, teacherId: string) =>
-    api.patch<import("@/types").Course>(`/v1/courses/${courseId}/teacher`, { teacherId }),
+    api.patch<import("@/types").Course>(ENDPOINTS.courses.teacher(courseId), { teacherId }),
 }
 
 export const scheduleApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").ScheduleSlot[]>(`/v1/schedules${qs}`)
+    return api.get<import("@/types").ScheduleSlot[]>(`${ENDPOINTS.schedules.base}${qs}`)
   },
-  create: (body: unknown) => api.post<import("@/types").ScheduleSlot>("/v1/schedules", body),
-  delete: (id: string)    => api.delete<void>(`/v1/schedules/${id}`),
+  create: (body: unknown) => api.post<import("@/types").ScheduleSlot>(ENDPOINTS.schedules.base, body),
+  delete: (id: string)    => api.delete<void>(ENDPOINTS.schedules.detail(id)),
 }
 
 export const roomApi = {
-  list:   ()              => api.get<import("@/types").Room[]>("/v1/rooms"),
-  create: (body: unknown) => api.post<import("@/types").Room>("/v1/rooms", body),
-  delete: (id: string)    => api.delete<void>(`/v1/rooms/${id}`),
+  list:   ()              => api.get<import("@/types").Room[]>(ENDPOINTS.rooms.base),
+  create: (body: unknown) => api.post<import("@/types").Room>(ENDPOINTS.rooms.base, body),
+  delete: (id: string)    => api.delete<void>(ENDPOINTS.rooms.detail(id)),
 }
 
 // ─── Students ─────────────────────────────────────────────────────────────────
@@ -140,13 +213,13 @@ export const roomApi = {
 export const studentApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Student[]>(`/v1/students${qs}`)
+    return api.get<import("@/types").Student[]>(`${ENDPOINTS.students.base}${qs}`)
   },
-  get:    (id: string)         => api.get<import("@/types").Student>(`/v1/students/${id}`),
-  create: (body: unknown)      => api.post<import("@/types").Student>("/v1/students", body),
-  update: (id: string, b: unknown) => api.put<import("@/types").Student>(`/v1/students/${id}`, b),
+  get:    (id: string)         => api.get<import("@/types").Student>(ENDPOINTS.students.detail(id)),
+  create: (body: unknown)      => api.post<import("@/types").Student>(ENDPOINTS.students.base, body),
+  update: (id: string, b: unknown) => api.put<import("@/types").Student>(ENDPOINTS.students.detail(id), b),
   updateStatus: (id: string, status: string) =>
-    api.patch<import("@/types").Student>(`/v1/students/${id}/status`, { status }),
+    api.patch<import("@/types").Student>(ENDPOINTS.students.status(id), { status }),
 }
 
 // ─── Teachers ─────────────────────────────────────────────────────────────────
@@ -154,12 +227,12 @@ export const studentApi = {
 export const teacherApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Teacher[]>(`/v1/teachers${qs}`)
+    return api.get<import("@/types").Teacher[]>(`${ENDPOINTS.teachers.base}${qs}`)
   },
-  get:    (id: string)         => api.get<import("@/types").Teacher>(`/v1/teachers/${id}`),
-  create: (body: unknown)      => api.post<import("@/types").Teacher>("/v1/teachers", body),
-  update: (id: string, b: unknown) => api.put<import("@/types").Teacher>(`/v1/teachers/${id}`, b),
-  titles: ()                   => api.get<string[]>("/v1/teachers/titles"),
+  get:    (id: string)         => api.get<import("@/types").Teacher>(ENDPOINTS.teachers.detail(id)),
+  create: (body: unknown)      => api.post<import("@/types").Teacher>(ENDPOINTS.teachers.base, body),
+  update: (id: string, b: unknown) => api.put<import("@/types").Teacher>(ENDPOINTS.teachers.detail(id), b),
+  titles: ()                   => api.get<string[]>(ENDPOINTS.teachers.titles),
 }
 
 // ─── Grades ───────────────────────────────────────────────────────────────────
@@ -167,21 +240,21 @@ export const teacherApi = {
 export const gradeApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Grade[]>(`/v1/grades${qs}`)
+    return api.get<import("@/types").Grade[]>(`${ENDPOINTS.grades.base}${qs}`)
   },
-  upsert: (body: unknown)       => api.post<import("@/types").Grade>("/v1/grades", body),
+  upsert: (body: unknown)       => api.post<import("@/types").Grade>(ENDPOINTS.grades.base, body),
   updateStatus: (id: string, status: string) =>
-    api.patch<import("@/types").Grade>(`/v1/grades/${id}/status`, { status }),
+    api.patch<import("@/types").Grade>(ENDPOINTS.grades.status(id), { status }),
 }
 
 export const appealApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").GradeAppeal[]>(`/v1/appeals${qs}`)
+    return api.get<import("@/types").GradeAppeal[]>(`${ENDPOINTS.appeals.base}${qs}`)
   },
-  create: (body: unknown)      => api.post<import("@/types").GradeAppeal>("/v1/appeals", body),
+  create: (body: unknown)      => api.post<import("@/types").GradeAppeal>(ENDPOINTS.appeals.base, body),
   resolve:(id: string, status: "approved" | "rejected", response: string) =>
-    api.patch<import("@/types").GradeAppeal>(`/v1/appeals/${id}/resolve`, { status, response }),
+    api.patch<import("@/types").GradeAppeal>(ENDPOINTS.appeals.resolve(id), { status, response }),
 }
 
 // ─── Assignments & Submissions ────────────────────────────────────────────────
@@ -189,29 +262,29 @@ export const appealApi = {
 export const assignmentApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Assignment[]>(`/v1/assignments${qs}`)
+    return api.get<import("@/types").Assignment[]>(`${ENDPOINTS.assignments.base}${qs}`)
   },
-  create: (body: unknown) => api.post<import("@/types").Assignment>("/v1/assignments", body),
-  delete: (id: string)    => api.delete<void>(`/v1/assignments/${id}`),
+  create: (body: unknown) => api.post<import("@/types").Assignment>(ENDPOINTS.assignments.base, body),
+  delete: (id: string)    => api.delete<void>(ENDPOINTS.assignments.detail(id)),
 }
 
 export const submissionApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Submission[]>(`/v1/submissions${qs}`)
+    return api.get<import("@/types").Submission[]>(`${ENDPOINTS.submissions.base}${qs}`)
   },
-  create: (body: unknown) => api.post<import("@/types").Submission>("/v1/submissions", body),
+  create: (body: unknown) => api.post<import("@/types").Submission>(ENDPOINTS.submissions.base, body),
   grade:  (id: string, grade: number, feedback: string) =>
-    api.patch<import("@/types").Submission>(`/v1/submissions/${id}/grade`, { grade, feedback }),
+    api.patch<import("@/types").Submission>(ENDPOINTS.submissions.grade(id), { grade, feedback }),
 }
 
 export const resourceApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").CourseResource[]>(`/v1/resources${qs}`)
+    return api.get<import("@/types").CourseResource[]>(`${ENDPOINTS.resources.base}${qs}`)
   },
-  create: (body: unknown) => api.post<import("@/types").CourseResource>("/v1/resources", body),
-  delete: (id: string)    => api.delete<void>(`/v1/resources/${id}`),
+  create: (body: unknown) => api.post<import("@/types").CourseResource>(ENDPOINTS.resources.base, body),
+  delete: (id: string)    => api.delete<void>(ENDPOINTS.resources.detail(id)),
 }
 
 // ─── Announcements & Notifications ───────────────────────────────────────────
@@ -219,13 +292,13 @@ export const resourceApi = {
 export const announcementApi = {
   list:   (params?: Record<string, string>) => {
     const qs = params ? "?" + new URLSearchParams(params).toString() : ""
-    return api.get<import("@/types").Announcement[]>(`/v1/announcements${qs}`)
+    return api.get<import("@/types").Announcement[]>(`${ENDPOINTS.announcements.base}${qs}`)
   },
-  create: (body: unknown) => api.post<import("@/types").Announcement>("/v1/announcements", body),
+  create: (body: unknown) => api.post<import("@/types").Announcement>(ENDPOINTS.announcements.base, body),
 }
 
 export const notificationApi = {
-  list:       ()          => api.get<import("@/types").Notification[]>("/v1/notifications"),
-  markRead:   (id: string)=> api.patch<void>(`/v1/notifications/${id}/read`, {}),
-  markAllRead:()          => api.patch<void>("/v1/notifications/read-all", {}),
+  list:       ()          => api.get<import("@/types").Notification[]>(ENDPOINTS.notifications.base),
+  markRead:   (id: string)=> api.patch<void>(ENDPOINTS.notifications.read(id), {}),
+  markAllRead:()          => api.patch<void>(ENDPOINTS.notifications.readAll, {}),
 }

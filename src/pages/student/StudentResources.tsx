@@ -20,7 +20,7 @@ export function StudentResources() {
       const resources = store.courseResources.filter((r) => r.courseId === c.id)
       return {
         ...c,
-        teacherName: teacher ? `${teacher.firstName} ${teacher.familyName} ${teacher.lastName}` : "—",
+        teacherName: teacher ? `${teacher.first_name} ${teacher.family_name} ${teacher.last_name}` : "—",
         resources,
       }
     })

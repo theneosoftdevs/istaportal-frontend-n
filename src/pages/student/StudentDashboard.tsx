@@ -3,56 +3,57 @@ import { BookOpen, GaugeCircle, CalendarClock, Award } from "lucide-react"
 import { KPICard } from "@/components/ui/KPICard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader } from "@/components/ui/Loader"
-import { ScheduleGrid } from "@/components/ScheduleGrid"
-import { AnnouncementList } from "@/components/AnnouncementList"
-import { DashboardLayout } from "@/components/DashboardLayout"
+import { ScheduleGrid } from "@/components/ui/ScheduleGrid"
+import { AnnouncementList } from "@/components/ui/AnnouncementList"
+import { DashboardLayout } from "@/components/ui/DashboardLayout"
 import { usePageData } from "@/hooks/usePageData"
 import { useAuth } from "@/contexts/AuthContext"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { getStudentDashboardData } from "@/lib/selectors"
 
 export function StudentDashboard() {
   const { user } = useAuth()
 
   const { data, loading } = usePageData((d) =>
-    getStudentDashboardData(d, user?.refId ?? d.students[0]?.id)
+    getStudentDashboardData(d, user?.id)
   )
 
   if (loading || !data) return <Loader fullHeight />
 
   const { student, courses, schedules, announcements, grades, validated } = data
+  const average = student.average ?? 0
 
   return (
     <DashboardLayout
-      title={`${locales.common.greeting}, ${student.firstName}`}
-      subtitle={`${student.matricule} · ${student.promotionId.toUpperCase()}`}
+      title={`${i18n.common.greeting}, ${student.user?.first_name || student.first_name || ""}`}
+      subtitle={`${student.matricule} · ${(student.promotion_id || "").toUpperCase()} ${student.phone_number ? `· ${student.phone_number}` : ""}`}
       stats={
         <>
           <KPICard
-            title={locales.student.courses_enrolled}
+            title={i18n.student.courses_enrolled}
             value={courses.length}
-            subtitle={locales.student.current_semester}
+            subtitle={i18n.student.current_semester}
             icon={BookOpen}
             colorClass="bg-chart-1/10 text-chart-1"
           />
           <KPICard
-            title={locales.student.general_average}
-            value={`${student.average.toFixed(1)}/20`}
-            subtitle={locales.common.session_in_progress}
+            title={i18n.student.general_average}
+            value={`${average.toFixed(1)}/20`}
+            subtitle={i18n.common.session_in_progress}
             icon={GaugeCircle}
             colorClass="bg-chart-2/10 text-chart-2"
           />
           <KPICard
-            title={locales.rectorat.validated_grades_label}
+            title={i18n.rectorat.validated_grades_label}
             value={`${validated}/${grades.length}`}
-            subtitle={locales.rectorat.validated}
+            subtitle={i18n.rectorat.validated}
             icon={Award}
             colorClass="bg-chart-3/15 text-chart-3"
           />
           <KPICard
-            title={locales.teacher.weekly_sessions}
+            title={i18n.teacher.weekly_sessions}
             value={schedules.length}
-            subtitle={locales.student.schedule}
+            subtitle={i18n.student.schedule}
             icon={CalendarClock}
             colorClass="bg-chart-4/10 text-chart-4"
           />
@@ -61,7 +62,7 @@ export function StudentDashboard() {
     >
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>{locales.student.next_courses}</CardTitle>
+          <CardTitle>{i18n.student.next_courses}</CardTitle>
         </CardHeader>
         <CardContent>
           <ScheduleGrid slots={schedules} courses={courses} />
@@ -70,7 +71,7 @@ export function StudentDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{locales.student.latest_announcements}</CardTitle>
+          <CardTitle>{i18n.student.latest_announcements}</CardTitle>
         </CardHeader>
         <CardContent>
           <AnnouncementList items={announcements.slice(0, 3)} />

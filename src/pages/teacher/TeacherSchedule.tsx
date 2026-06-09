@@ -13,9 +13,9 @@ export function TeacherSchedule() {
   const { user } = useAuth()
 
   const { data, loading } = usePageData((d) => {
-    const teacher = d.teachers.find((t) => t.id === user?.refId) ?? d.teachers[0]
-    const courses = d.courses.filter((c) => c.teacherId === teacher.id)
-    const slots   = d.schedules.filter((s) => s.teacherId === teacher.id)
+    const teacher = d.teachers.find((t) => t.user_id === user?.id) ?? d.teachers[0]
+    const courses = d.courses.filter((c) => c.teacher_id === teacher.id)
+    const slots   = d.schedules.filter((s) => s.teacher_id === teacher.id)
     return { teacher, courses, slots }
   })
 
@@ -56,7 +56,7 @@ export function TeacherSchedule() {
               <CardContent>
                 <ul className="space-y-3">
                   {daySlots.map((slot) => {
-                    const course = courseOf(slot.courseId)
+                    const course = courseOf(slot.course_id)
                     return (
                       <li
                         key={slot.id}

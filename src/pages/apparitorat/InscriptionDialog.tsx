@@ -1,6 +1,8 @@
 // src/pages/apparitorat/InscriptionDialog.tsx
 import { useMemo, useState } from "react"
-import { UserPlus } from "lucide-react"
+import { authApi } from "@/api/endpoints/auth"
+import { studentApi } from "@/api/endpoints/users"
+import { UserPlus, ArrowRight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,95 +22,156 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { StudentSelect } from "@/components/ui/StudentSelect"
 import { useStore } from "@/hooks/usePageData"
-import { addStudent, generateId } from "@/lib/store"
-import type { Student } from "@/types"
 import { toast } from "sonner"
 
 interface FormState {
-  firstName: string
-  familyName: string
-  lastName: string
-  birthDate: string
-  email: string
-  phone: string
+  first_name: string
+  middle_name: string
+  last_name: string
   gender: "M" | "F" | ""
-  facultyId: string
-  promotionId: string
+  email: string
+  birth_date: string
+  phone_number: string
+  faculty_id: string
+  promotion_id: string
+}
+
+interface InscriptionDialogProps {
+  onSuccess?: (student: Student) => void
 }
 
 const EMPTY: FormState = {
-  firstName: "",
-  familyName: "",
-  lastName: "",
-  birthDate: "",
-  email: "",
-  phone: "",
+  first_name: "",
+  middle_name: "",
+  last_name: "",
   gender: "",
-  facultyId: "",
-  promotionId: "",
+  email: "",
+  birth_date: "",
+  phone_number: "",
+  faculty_id: "",
+  promotion_id: "",
 }
 
-export function InscriptionDialog() {
+export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
   const store = useStore()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY)
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const promotions = useMemo(
-    () => store.promotions.filter((p) => !form.facultyId || p.facultyId === form.facultyId),
-    [store.promotions, form.facultyId],
-  )
+  
+  // Wizard state
+  const [step, setStep] = useState<1 | 2>(1)
+  const [createdUserId, setCreatedUserId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }))
   }
 
-  const validate = () => {
+  const validateStep1 = () => {
     const e: Record<string, string> = {}
-    if (!form.firstName.trim()) e.firstName = "Le prénom est requis."
-    if (!form.familyName.trim()) e.familyName = "Le nom est requis."
-    if (!form.lastName.trim()) e.lastName = "Le postnom est requis."
-    if (!form.birthDate) e.birthDate = "La date de naissance est requise."
+    if (!form.first_name.trim()) e.first_name = "Le prénom est requis."
+    if (!form.last_name.trim()) e.last_name = "Le nom de famille est requis."
+    if (!form.gender) e.gender = "Le genre est requis."
     if (!form.email.trim()) e.email = "L'email est requis."
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Email invalide."
-    if (!form.gender) e.gender = "Le genre est requis."
-    if (!form.facultyId) e.facultyId = "La faculté est requise."
-    if (!form.promotionId) e.promotionId = "La promotion est requise."
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!validate()) return
+  const validateStep2 = () => {
+    const e: Record<string, string> = {}
+    if (!form.birth_date) e.birth_date = "La date de naissance est requise."
+    if (!form.phone_number.trim()) e.phone_number = "Le numéro de téléphone est requis."
+    if (!form.faculty_id) e.faculty_id = "La faculté est requise."
+    if (!form.promotion_id) e.promotion_id = "La promotion est requise."
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
 
-    const year = new Date().getFullYear()
-    const seq = String(store.students.length + 1).padStart(3, "0")
-    const newStudent: Student = {
-      id: generateId("s"),
-      matricule: `ISTA-${year}-${seq}`,
-      firstName: form.firstName.trim(),
-      familyName: form.familyName.trim(),
-      lastName: form.lastName.trim(),
-      birthDate: form.birthDate,
-      email: form.email.trim(),
-      phone: form.phone.trim() || "—",
-      gender: form.gender as "M" | "F",
-      promotionId: form.promotionId,
-      facultyId: form.facultyId,
-      status: "pending",
-      enrollmentDate: new Date().toISOString().slice(0, 10),
-      average: 0,
+  // Filter promotions based on selected faculty
+  const filteredPromotions = useMemo(() => {
+    if (!form.faculty_id) return []
+    return store.promotions.filter((p) => p.faculty_id === form.faculty_id || p.facultyId === form.faculty_id)
+  }, [store.promotions, form.faculty_id])
+
+  const handleNextStep = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateStep1()) return
+
+    // If we already created the user and just went back to see info, we skip creation
+    if (createdUserId) {
+      setStep(2)
+      return
     }
-    addStudent(newStudent)
 
-    // Simulate sending email
-    toast.success(`Inscription réussie ! Un email avec les accès a été envoyé à ${form.email}`)
+    setIsLoading(true)
+    try {
+      // Step 1: Create the User account without sending password
+      const authRes = await authApi.register({
+        first_name: form.first_name.trim(),
+        middle_name: form.middle_name.trim(),
+        last_name: form.last_name.trim(),
+        gender: form.gender as "M" | "F",
+        email: form.email.trim(),
+      })
 
-    setForm(EMPTY)
-    setErrors({})
-    setOpen(false)
+      const userId = authRes?.user_id || authRes?.id
+      if (!userId) {
+        throw new Error("L'ID utilisateur n'a pas été renvoyé par le serveur.")
+      }
+
+      setCreatedUserId(userId)
+      toast.success("Utilisateur créé. Veuillez renseigner les informations académiques.")
+      setStep(2)
+    } catch (err: any) {
+      toast.error(err?.message || "Erreur lors de la création du compte.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleFinish = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validateStep2() || !createdUserId) return
+
+    setIsLoading(true)
+    try {
+      // Step 2: Create the Student Profile linking to promotion and faculty
+      // Ensure birth_date is in ISO format if it's just a date string
+      const birthDateISO = form.birth_date.includes("T") 
+        ? form.birth_date 
+        : `${form.birth_date}T00:00:00Z`
+
+      const student = await studentApi.createProfile({
+        user_id: createdUserId,
+        promotion_id: form.promotion_id,
+        faculty_id: form.faculty_id,
+        birth_date: birthDateISO,
+        phone_number: form.phone_number.trim(),
+      })
+
+      toast.success(`Inscription complète pour ${form.email} !`)
+      
+      if (onSuccess) {
+        onSuccess(student)
+      }
+
+      setForm(EMPTY)
+      setCreatedUserId(null)
+      setStep(1)
+      setErrors({})
+      setOpen(false)
+      
+      if (!onSuccess) {
+        window.location.reload() // Refresh list if no custom handler
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Erreur lors de l'association à la promotion.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -116,177 +179,243 @@ export function InscriptionDialog() {
       open={open}
       onOpenChange={(o) => {
         setOpen(o)
-        if (!o) setErrors({})
+        if (!o) {
+          setForm(EMPTY)
+          setCreatedUserId(null)
+          setStep(1)
+          setErrors({})
+        }
       }}
     >
       <DialogTrigger asChild>
         <Button>
-          <UserPlus className="size-4" />
+          <UserPlus className="size-4 mr-2" />
           Inscrire un étudiant
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nouvelle inscription</DialogTitle>
+          <DialogTitle>Nouvelle inscription {step === 1 ? "(1/2)" : "(2/2)"}</DialogTitle>
           <DialogDescription>
-            Renseignez les informations de l'étudiant. Le statut initial est « En attente ».
+            {step === 1
+              ? "Renseignez les informations de base de l'étudiant pour créer son compte."
+              : "Renseignez la date de naissance, le téléphone et les informations académiques."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="familyName">Nom</Label>
-              <Input
-                id="familyName"
-                value={form.familyName}
-                onChange={(e) => set("familyName", e.target.value)}
-                aria-invalid={!!errors.familyName}
-              />
-              {errors.familyName ? (
-                <p className="text-xs text-destructive">{errors.familyName}</p>
-              ) : null}
+        {step === 1 ? (
+          <form onSubmit={handleNextStep} className="space-y-4" noValidate>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="last_name">Nom de famille</Label>
+                <Input
+                  id="last_name"
+                  value={form.last_name}
+                  onChange={(e) => set("last_name", e.target.value)}
+                  aria-invalid={!!errors.last_name}
+                  disabled={!!createdUserId}
+                />
+                {errors.last_name && <p className="text-xs text-destructive">{errors.last_name}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="middle_name">Postnom (optionnel)</Label>
+                <Input
+                  id="middle_name"
+                  value={form.middle_name}
+                  onChange={(e) => set("middle_name", e.target.value)}
+                  disabled={!!createdUserId}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="first_name">Prénom</Label>
+                <Input
+                  id="first_name"
+                  value={form.first_name}
+                  onChange={(e) => set("first_name", e.target.value)}
+                  aria-invalid={!!errors.first_name}
+                  disabled={!!createdUserId}
+                />
+                {errors.first_name && <p className="text-xs text-destructive">{errors.first_name}</p>}
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lastName">Postnom</Label>
-              <Input
-                id="lastName"
-                value={form.lastName}
-                onChange={(e) => set("lastName", e.target.value)}
-                aria-invalid={!!errors.lastName}
-              />
-              {errors.lastName ? (
-                <p className="text-xs text-destructive">{errors.lastName}</p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="firstName">Prénom</Label>
-              <Input
-                id="firstName"
-                value={form.firstName}
-                onChange={(e) => set("firstName", e.target.value)}
-                aria-invalid={!!errors.firstName}
-              />
-              {errors.firstName ? (
-                <p className="text-xs text-destructive">{errors.firstName}</p>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="birthDate">Date de naissance</Label>
-              <Input
-                id="birthDate"
-                type="date"
-                value={form.birthDate}
-                onChange={(e) => set("birthDate", e.target.value)}
-                aria-invalid={!!errors.birthDate}
-              />
-              {errors.birthDate ? (
-                <p className="text-xs text-destructive">{errors.birthDate}</p>
-              ) : null}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                  aria-invalid={!!errors.email}
+                  disabled={!!createdUserId}
+                />
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Genre</Label>
+                <Select
+                  value={form.gender}
+                  onValueChange={(v) => set("gender", v as "M" | "F")}
+                  disabled={!!createdUserId}
+                >
+                  <SelectTrigger aria-invalid={!!errors.gender}>
+                    <SelectValue placeholder="Sélectionner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Masculin</SelectItem>
+                    <SelectItem value="F">Féminin</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.gender && <p className="text-xs text-destructive">{errors.gender}</p>}
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                aria-invalid={!!errors.email}
-              />
-              {errors.email ? (
-                <p className="text-xs text-destructive">{errors.email}</p>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                placeholder="+243 ..."
-              />
+            <DialogFooter className="gap-2 sm:gap-0 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Création..." : "Suivant"}
+                <ArrowRight className="ml-2 size-4" />
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <form onSubmit={handleFinish} className="space-y-4" noValidate>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <Label className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-primary">
+                Étudiant à inscrire
+              </Label>
+              {createdUserId && form.email ? (
+                <div className="flex items-center gap-3 rounded-md bg-background p-2 border border-border">
+                  <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                    {form.first_name[0]}{form.last_name[0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold truncate">{form.first_name} {form.last_name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{form.email}</p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-[10px] h-7 px-2 font-bold uppercase tracking-widest text-primary"
+                    onClick={() => {
+                      setCreatedUserId(null)
+                      setForm(EMPTY)
+                    }}
+                  >
+                    Changer
+                  </Button>
+                </div>
+              ) : (
+                <StudentSelect
+                  value={undefined}
+                  onSelect={(s) => {
+                    if (s) {
+                      setCreatedUserId(s.user_id)
+                      set("birth_date", s.birth_date ? s.birth_date.split("T")[0] : "")
+                      set("phone_number", s.phone_number || "")
+                      set("faculty_id", s.faculty_id || s.promotion?.faculty?.id || "")
+                      set("promotion_id", s.promotion_id || s.promotion?.id || "")
+                      set("first_name", s.first_name || s.user?.first_name || "")
+                      set("last_name", s.family_name || s.user?.last_name || "")
+                      set("middle_name", s.last_name || s.user?.middle_name || "")
+                      set("email", s.email || s.user?.email || "")
+                      set("gender", (s.gender || s.user?.gender || "") as "M" | "F")
+                    }
+                  }}
+                />
+              )}
             </div>
-            <div className="space-y-1.5">
-              <Label>Genre</Label>
-              <Select value={form.gender} onValueChange={(v) => set("gender", v as "M" | "F")}>
-                <SelectTrigger aria-invalid={!!errors.gender}>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="M">Masculin</SelectItem>
-                  <SelectItem value="F">Féminin</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.gender ? (
-                <p className="text-xs text-destructive">{errors.gender}</p>
-              ) : null}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Faculté</Label>
-              <Select
-                value={form.facultyId}
-                onValueChange={(v) => {
-                  set("facultyId", v)
-                  set("promotionId", "")
-                }}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="birth_date">Date de naissance</Label>
+                <Input
+                  id="birth_date"
+                  type="date"
+                  value={form.birth_date}
+                  onChange={(e) => set("birth_date", e.target.value)}
+                  aria-invalid={!!errors.birth_date}
+                />
+                {errors.birth_date && <p className="text-xs text-destructive">{errors.birth_date}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="phone_number">Téléphone</Label>
+                <Input
+                  id="phone_number"
+                  value={form.phone_number}
+                  onChange={(e) => set("phone_number", e.target.value)}
+                  placeholder="Ex: 0123456789"
+                  aria-invalid={!!errors.phone_number}
+                />
+                {errors.phone_number && <p className="text-xs text-destructive">{errors.phone_number}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Faculté</Label>
+                <Select
+                  value={form.faculty_id}
+                  onValueChange={(v) => {
+                    set("faculty_id", v)
+                    set("promotion_id", "") // Reset promotion when faculty changes
+                  }}
+                >
+                  <SelectTrigger aria-invalid={!!errors.faculty_id}>
+                    <SelectValue placeholder="Choisir une faculté" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {store.faculties.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.name} ({f.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.faculty_id && <p className="text-xs text-destructive">{errors.faculty_id}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Promotion</Label>
+                <Select
+                  value={form.promotion_id}
+                  onValueChange={(v) => set("promotion_id", v)}
+                  disabled={!form.faculty_id}
+                >
+                  <SelectTrigger aria-invalid={!!errors.promotion_id}>
+                    <SelectValue placeholder={form.faculty_id ? "Choisir une promotion" : "Sélectionnez d'abord une faculté"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredPromotions.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.promotion_id && <p className="text-xs text-destructive">{errors.promotion_id}</p>}
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(1)}
               >
-                <SelectTrigger aria-invalid={!!errors.facultyId}>
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {store.faculties.map((f) => (
-                    <SelectItem key={f.id} value={f.id}>
-                      {f.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.facultyId ? (
-                <p className="text-xs text-destructive">{errors.facultyId}</p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label>Promotion</Label>
-              <Select
-                value={form.promotionId}
-                onValueChange={(v) => set("promotionId", v)}
-                disabled={!form.facultyId}
-              >
-                <SelectTrigger aria-invalid={!!errors.promotionId}>
-                  <SelectValue
-                    placeholder={form.facultyId ? "Sélectionner" : "Choisir une faculté"}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {promotions.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.promotionId ? (
-                <p className="text-xs text-destructive">{errors.promotionId}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Annuler
-            </Button>
-            <Button type="submit">Enregistrer l'inscription</Button>
-          </DialogFooter>
-        </form>
+                <ArrowLeft className="mr-2 size-4" />
+                Retour
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Association..." : "Terminer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

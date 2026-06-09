@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
 import { useCurrentTeacher } from "@/hooks/useCurrentUser"
-import { addCourseResource, removeCourseResource, nextResourceId } from "@/lib/store"
+import { addCourseResource, removeCourseResource, generateId } from "@/lib/store"
 import { RESOURCE_ICONS, RESOURCE_LABELS } from "@/lib/constants"
 import type { CourseResource } from "@/types"
 
@@ -53,7 +53,7 @@ export function TeacherCourses() {
   function handleAdd(courseId: string) {
     if (!form.title.trim() || !form.url.trim()) return
     addCourseResource({
-      id:        nextResourceId(),
+      id:        generateId(),
       courseId,
       teacherId: teacher.id,
       title:     form.title.trim(),

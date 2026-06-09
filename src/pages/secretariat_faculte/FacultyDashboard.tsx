@@ -13,32 +13,48 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { usePageData } from "@/hooks/usePageData"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { getFacultyDashboardData } from "@/lib/selectors"
 import { useAuth } from "@/contexts/AuthContext"
 
 export function FacultyDashboard() {
   const { user } = useAuth()
-  const [facultyId, setFacultyId] = useState(user?.facultyId || "f1")
+  const [facultyId, setFacultyId] = useState(user?.facultyId || "")
 
-  const { data, loading } = usePageData((d) =>
-    getFacultyDashboardData(d, facultyId)
-  )
+  const { data, loading } = usePageData((d) => {
+    const fallbackId = facultyId || d.faculties[0]?.id
+    return getFacultyDashboardData(d, fallbackId)
+  })
+
+  // Update facultyId if it was empty and data loaded
+  if (!facultyId && data?.faculty?.id) {
+    setFacultyId(data.faculty.id)
+  }
 
   if (loading || !data) return <Loader fullHeight />
+
+  const { faculty, faculties, students, promotions, courses, teachers } = data
+
+  if (!faculty) {
+    return (
+      <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Aucune faculté trouvée.</p>
+      </div>
+    )
+  }
 
   return (
     <>
       <PageHeader
-        title={locales.secretariat_faculte.dashboard_title}
-        subtitle={`${data.faculty.name} · ${locales.secretariat_faculte.dean} : ${data.faculty.dean}`}
+        title={i18n.secretariat_faculte.dashboard_title}
+        subtitle={`${faculty.name} · Secrétaire de Faculté : ${faculty.secretary ? `${faculty.secretary.first_name} ${faculty.secretary.last_name}` : "—"}`}
         action={
           <Select value={facultyId} onValueChange={setFacultyId}>
             <SelectTrigger className="w-56">
-              <SelectValue placeholder={locales.secretariat_faculte.faculty_select} />
+              <SelectValue placeholder={i18n.secretariat_faculte.faculty_select} />
             </SelectTrigger>
             <SelectContent>
-              {data.faculties.map((f) => (
+              {faculties.map((f) => (
                 <SelectItem key={f.id} value={f.id}>
                   {f.name}
                 </SelectItem>
@@ -49,28 +65,28 @@ export function FacultyDashboard() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard title={locales.secretariat_faculte.students} value={data.students.length} icon={Users} colorClass="bg-chart-1/10 text-chart-1" />
-        <KPICard title={locales.secretariat_faculte.promotions} value={data.promotions.length} icon={GraduationCap} colorClass="bg-chart-2/10 text-chart-2" />
-        <KPICard title={locales.secretariat_faculte.courses} value={data.courses.length} icon={BookOpen} colorClass="bg-chart-4/10 text-chart-4" />
-        <KPICard title={locales.secretariat_faculte.teachers} value={data.teachers.length} icon={UserSquare2} colorClass="bg-chart-3/15 text-chart-3" />
+        <KPICard title={i18n.secretariat_faculte.students} value={students.length} icon={Users} colorClass="bg-chart-1/10 text-chart-1" />
+        <KPICard title={i18n.secretariat_faculte.promotions} value={promotions.length} icon={GraduationCap} colorClass="bg-chart-2/10 text-chart-2" />
+        <KPICard title={i18n.secretariat_faculte.courses} value={courses.length} icon={BookOpen} colorClass="bg-chart-4/10 text-chart-4" />
+        <KPICard title={i18n.secretariat_faculte.teachers} value={teachers.length} icon={UserSquare2} colorClass="bg-chart-3/15 text-chart-3" />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{locales.secretariat_faculte.promotions}</CardTitle>
-            <CardDescription>{locales.secretariat_faculte.promotions_effectifs}</CardDescription>
+            <CardTitle>{i18n.secretariat_faculte.promotions}</CardTitle>
+            <CardDescription>{i18n.secretariat_faculte.promotions_effectifs}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-border">
-              {data.promotions.map((p) => (
+              {promotions.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div>
                     <p className="font-medium text-foreground">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{locales.secretariat_faculte.level} {p.level}</p>
+                    <p className="text-xs text-muted-foreground">{i18n.secretariat_faculte.level} {p.level}</p>
                   </div>
                   <span className="rounded-md bg-muted px-2 py-1 text-sm font-semibold text-foreground">
-                    {data.students.filter((s) => s.promotionId === p.id).length}
+                    {students.filter((s) => s.promotionId === p.id).length}
                   </span>
                 </li>
               ))}
@@ -80,16 +96,16 @@ export function FacultyDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{locales.secretariat_faculte.faculty_teachers}</CardTitle>
-            <CardDescription>{locales.secretariat_faculte.faculty_teachers_desc}</CardDescription>
+            <CardTitle>{i18n.secretariat_faculte.faculty_teachers}</CardTitle>
+            <CardDescription>{i18n.secretariat_faculte.faculty_teachers_desc}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="divide-y divide-border">
-              {data.teachers.map((t) => (
+              {teachers.map((t) => (
                 <li key={t.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div>
                     <p className="font-medium text-foreground">
-                      {t.firstName} {t.familyName} {t.lastName}
+                      {t.first_name} {t.family_name} {t.last_name}
                     </p>
                     <p className="text-xs text-muted-foreground">{t.title}</p>
                   </div>

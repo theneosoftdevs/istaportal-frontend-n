@@ -1,63 +1,87 @@
 // src/pages/LoginPage.tsx
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Moon, Sun, ArrowRight, Mail, Lock, Loader2, ChevronLeft, Eye, EyeOff, Download } from "lucide-react"
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "@/components/ui"
-import { cn } from "@/lib/utils"
+import { Link, useNavigate } from "react-router-dom"
+import { Moon, Sun, Mail, Lock, Loader2, Eye, EyeOff, ArrowLeft, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/AuthContext"
 import { useApp } from "@/contexts/AppContext"
-import { PORTALS } from "@/lib/portals"
-import type { Role } from "@/types"
 import { toast } from "sonner"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 export function LoginPage() {
   const { login, forgotPassword } = useAuth()
   const { theme, toggleTheme } = useApp()
   const navigate = useNavigate()
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+
+  const [email, setEmail]           = useState("")
+  const [password, setPassword]     = useState("")
+  const [error, setError]           = useState<string | null>(null)
+  const [isLoading, setIsLoading]   = useState(false)
   const [showForgot, setShowForgot] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const handleInstall = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const prompt = (window as any).deferredPrompt
-    if (!prompt) {
-      if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
-        toast.info("ISTA PORTAL est déjà installé sur votre appareil.")
-      } else {
-        toast.info("Pour installer : utilisez l'option 'Ajouter à l'écran d'accueil' de votre navigateur.")
-      }
-      return
-    }
-    prompt.prompt()
-    prompt.userChoice.then((choiceResult: { outcome: string }) => {
-      if (choiceResult.outcome === "accepted") {
-        toast.success("Installation d'ISTA PORTAL réussie !")
-      }
-      (window as any).deferredPrompt = null
-    })
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password) {
-      toast.error("Veuillez saisir votre e-mail et votre mot de passe.")
+    setError(null)
+
+    // Basic frontend validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      setError("L'adresse e-mail est requise.")
       return
     }
+    if (!emailRegex.test(email)) {
+      setError("Veuillez saisir une adresse e-mail valide.")
+      return
+    }
+    if (!password) {
+      setError("Le mot de passe est requis.")
+      return
+    }
+    if (password.length < 4) {
+      setError("Le mot de passe doit contenir au moins 4 caractères.")
+      return
+    }
+
     setIsLoading(true)
     try {
       await login(email, password)
-      toast.success(locales.common.success_login)
-      navigate("/", { replace: true })
-    } catch (err: unknown) {
-      const msg = err instanceof Error
-        ? (err as any).body?.error ?? err.message
-        : "Identifiants invalides."
-      toast.error(msg)
+      toast.success(i18n.common.success_login)
+      navigate("/home", { replace: true })
+    } catch (err: any) {
+      console.error("[Login Error]", err)
+      
+      let message = "Une erreur est survenue lors de la connexion."
+
+      // 1. Gestion des erreurs réseau (Serveur éteint, pas d'internet, etc.)
+      if (err instanceof TypeError && err.message.toLowerCase().includes("fetch")) {
+        message = "Le serveur est injoignable. Vérifiez votre connexion ou l'état du serveur."
+      } 
+      // 2. Gestion des erreurs spécifiques de l'API (codes HTTP)
+      else if (err.name === "ApiError" || err.status) {
+        const status = err.status
+        if (status === 401) {
+          message = "Identifiants incorrects. Veuillez réessayer."
+        } else if (status === 404) {
+          message = "Service d'authentification introuvable (404)."
+        } else if (status === 500) {
+          message = "Erreur interne du serveur. Veuillez réessayer plus tard."
+        } else if (status === 502 || status === 504) {
+          message = "Le serveur de passerelle (proxy) ne répond pas."
+        } else {
+          message = err.message || message
+        }
+      }
+      // 3. Fallback sur le message d'erreur standard
+      else if (err instanceof Error) {
+        message = err.message
+      }
+
+      setError(message)
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -65,209 +89,210 @@ export function LoginPage() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    
     if (!email) {
-      toast.error(locales.common.error_email)
+      setError(i18n.common.error_email)
       return
     }
+
     setIsLoading(true)
     try {
       await forgotPassword(email)
-      toast.success(locales.common.success_reset)
+      toast.success(i18n.common.success_reset)
       setShowForgot(false)
-    } catch {
-      // Always show success to prevent email enumeration
-      toast.success(locales.common.success_reset)
-      setShowForgot(false)
+    } catch (err: any) {
+      setError(err.message || "Une erreur est survenue.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleInputChange = (setter: (val: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setter(e.target.value)
+    if (error) setError(null)
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Shared Header */}
-      <header className="flex h-16 items-center justify-between border-b border-border bg-card/50 px-4 backdrop-blur-md sm:px-8">
-        <div className="flex items-center gap-3">
-          <img src="/ista.jpeg" alt="ISTA Logo" className="size-9 rounded-lg shadow-sm" />
-          <div className="flex flex-col">
-            <span className="text-sm font-black uppercase tracking-tighter text-foreground leading-none">ISTA PORTAL</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Management</span>
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+
+      {/* ── Header — même style qu'AppLayout ── */}
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6">
+        <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+          <img
+            src="/ista.jpeg"
+            alt="Logo ISTA"
+            className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
+          />
+          <div className="leading-none">
+            <p className="text-[11px] font-black uppercase tracking-tighter text-foreground">
+              ISTA PORTAL
+            </p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary">
+              Goma · Management
+            </p>
           </div>
-        </div>
+        </Link>
+
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
           className="rounded-full"
-          aria-label={theme === "dark" ? locales.common.light_mode : locales.common.dark_mode}
+          aria-label={theme === "dark" ? i18n.common.light_mode : i18n.common.dark_mode}
         >
           {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
         </Button>
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-5xl">
-          {!selectedRole && !showForgot && (
-            <div className="space-y-12">
-              <div className="mx-auto max-w-2xl text-center space-y-4">
-                <h1 className="text-4xl font-black tracking-tight text-foreground sm:text-6xl uppercase italic">
-                  {locales.common.welcome}
-                </h1>
-                <p className="text-lg font-medium text-muted-foreground">
-                  {locales.common.select_portal}
-                </p>
-              </div>
+      {/* ── Main ── */}
+      <main className="flex flex-1 items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm">
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {PORTALS.map((portal) => (
-                  <Card
-                    key={portal.role}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setSelectedRole(portal.role)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        setSelectedRole(portal.role)
-                      }
-                    }}
-                    className="group relative overflow-hidden transition-all hover:border-primary/50 hover:shadow-xl active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary outline-none cursor-pointer"
+          {/* Card — identique aux cards de l'app */}
+          <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+
+            {/* Card Header */}
+            <div className="flex flex-col space-y-1.5 p-6 pb-0">
+              {/* Bouton retour (mode forgot) */}
+              {showForgot && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgot(false)
+                    setError(null)
+                  }}
+                  className="mb-2 -ml-1 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <ArrowLeft className="size-3.5" />
+                  Retour
+                </button>
+              )}
+
+              <h1 className="text-xl font-black uppercase italic tracking-tight text-foreground">
+                {showForgot ? "Réinitialisation" : "Connexion"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {showForgot
+                  ? "Saisissez votre e-mail pour recevoir un lien de réinitialisation."
+                  : "Accédez à votre espace selon votre rôle."}
+              </p>
+            </div>
+
+            {/* Separator */}
+            <div className="mx-6 my-4 h-px bg-border" />
+
+            {/* Form */}
+            <form onSubmit={showForgot ? handleForgotPassword : handleLogin}>
+              <div className="space-y-4 px-6 pb-4">
+                
+                {error && (
+                  <Alert variant="destructive" className="py-2.5">
+                    <AlertCircle className="size-4" />
+                    <AlertDescription className="text-xs font-medium">
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="email"
+                    className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
                   >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className={cn("mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted/50 transition-colors group-hover:bg-primary/10", portal.color)}>
-                          <portal.icon className="size-6" />
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 gap-1.5 text-[10px] font-bold uppercase tracking-widest"
-                          onClick={handleInstall}
-                        >
-                          <Download className="size-3.5" />
-                          {locales.common.install}
-                        </Button>
-                      </div>
-                      <CardTitle className="text-xl font-bold">{locales.portals[portal.role as keyof typeof locales.portals]}</CardTitle>
-                      <CardDescription className="line-clamp-2 leading-relaxed">
-                        {locales.portals[`${portal.role}_desc` as keyof typeof locales.portals]}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center gap-1.5 text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                        {locales.common.access_portal}
-                        <ArrowRight className="size-4" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(selectedRole || showForgot) && (
-            <div className="mx-auto w-full max-w-md animate-in fade-in zoom-in duration-300">
-              <Card className="shadow-2xl border-primary/10">
-                <CardHeader className="space-y-1 pb-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedRole(null)
-                        setShowForgot(false)
-                      }}
-                      className="-ml-2 h-8 gap-1 text-muted-foreground hover:text-foreground"
-                    >
-                      <ChevronLeft className="size-4" />
-                      {locales.common.back}
-                    </Button>
-                    {selectedRole && (
-                      <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2 py-1 rounded-md">
-                        {locales.portals[selectedRole as keyof typeof locales.portals]}
-                      </span>
-                    )}
+                    Adresse e-mail
+                  </Label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="nom@ista-goma.cd"
+                      className="h-10 pl-10"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={handleInputChange(setEmail)}
+                      aria-invalid={!!error && (error.toLowerCase().includes("e-mail") || error.includes("requis"))}
+                    />
                   </div>
-                  <CardTitle className="text-2xl font-black uppercase italic tracking-tight">
-                    {showForgot ? locales.common.forgot_password_title : locales.common.identification}
-                  </CardTitle>
-                  <CardDescription>
-                    {showForgot
-                      ? locales.common.forgot_password_desc
-                      : locales.common.login_desc}
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={showForgot ? handleForgotPassword : handleLogin}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="font-bold uppercase text-[10px] tracking-widest">{locales.common.academic_email}</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="nom@ista-portal.cd"
-                          className="pl-10 h-11 border-muted-foreground/20 bg-muted/10 focus:bg-background transition-colors"
-                          required
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
+                </div>
+
+                {/* Password */}
+                {!showForgot && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor="password"
+                        className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                      >
+                        Mot de passe
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForgot(true)
+                          setError(null)
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary transition-opacity hover:opacity-70"
+                      >
+                        Oublié ?
+                      </button>
                     </div>
-                    {!showForgot && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="password" className="font-bold uppercase text-[10px] tracking-widest">{locales.common.password}</Label>
-                          <Button
-                            variant="link"
-                            className="h-auto p-0 text-[10px] font-bold uppercase tracking-widest text-primary"
-                            type="button"
-                            onClick={() => setShowForgot(true)}
-                          >
-                            {locales.common.forgot_link}
-                          </Button>
-                        </div>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                          <Input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            className="pl-10 pr-10 h-11 border-muted-foreground/20 bg-muted/10 focus:bg-background transition-colors"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="absolute right-1.5 top-1.5 h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={() => setShowPassword(!showPassword)}
-                            aria-label={showPassword ? locales.common.hide_password : locales.common.show_password}
-                          >
-                            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="flex flex-col gap-4 pt-2">
-                    <Button className="w-full h-11 font-bold uppercase tracking-widest shadow-lg shadow-primary/20" type="submit" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : (showForgot ? locales.common.reset_button : locales.common.login_button)}
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </div>
-          )}
+                    <div className="relative">
+                      <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className="h-10 pl-10 pr-10"
+                        required
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={handleInputChange(setPassword)}
+                        aria-invalid={!!error && (error.toLowerCase().includes("passe") || error.includes("requis"))}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label={showPassword ? "Masquer" : "Afficher"}
+                      >
+                        {showPassword
+                          ? <EyeOff className="size-4" />
+                          : <Eye className="size-4" />
+                        }
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Separator */}
+              <div className="mx-6 h-px bg-border" />
+
+              {/* Card Footer */}
+              <div className="p-6 pt-4">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-10 font-bold uppercase tracking-widest text-xs"
+                >
+                  {isLoading
+                    ? <Loader2 className="size-4 animate-spin" />
+                    : showForgot ? "Envoyer le lien" : "Se connecter"
+                  }
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <p className="mt-6 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground/50">
+            © {new Date().getFullYear()} ISTA-GOMA
+          </p>
         </div>
       </main>
-
-      <footer className="py-6 text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          © {new Date().getFullYear()} ISTA PORTAL · System
-        </p>
-      </footer>
     </div>
   )
 }

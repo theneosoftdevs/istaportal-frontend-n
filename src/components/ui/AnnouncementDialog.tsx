@@ -19,7 +19,7 @@ import { usePageData } from "@/hooks/usePageData"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import type { Role } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface AnnouncementDialogProps {
   open: boolean
@@ -27,7 +27,7 @@ interface AnnouncementDialogProps {
 }
 
 export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogProps) {
-  const { user } = useAuth()
+  const { user, roleName } = useAuth()
   const { data } = usePageData(d => d)
 
   const [title, setTitle] = useState("")
@@ -37,9 +37,11 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
   const [targetId, setTargetId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const canCreateGlobal = ["rectorat", "secretariat_general", "apparitorat"].includes(user?.role || "")
-  const canCreateFacultyAnnouncement = user?.role === "secretariat_faculte"
-  const canCreateCourse = user?.role === "teacher"
+  const teacher = roleName === "teacher" ? data?.teachers.find(t => t.user_id === user?.id) : null
+
+  const canCreateGlobal = ["rectorat", "secretariat_general", "apparitorat"].includes(roleName || "")
+  const canCreateFacultyAnnouncement = roleName === "secretariat_faculte"
+  const canCreateCourse = roleName === "teacher"
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +51,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
       id: `a-${Date.now()}`,
       title,
       body,
-      author: `${user?.firstName} ${user?.familyName} ${user?.lastName}`,
+      author: `${user?.first_name} ${user?.middle_name || ""} ${user?.last_name}`,
       date: new Date().toISOString().split("T")[0],
       audience: (scope === "global" ? "all" : "student") as any,
       priority,
@@ -61,7 +63,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
       addAnnouncement(newAnnouncement)
       setIsLoading(false)
       onOpenChange(false)
-      toast.success(locales.announcement_dialog.success_toast)
+      toast.success(i18n.announcement_dialog.success_toast)
       setTitle("")
       setBody("")
     }, 800)
@@ -71,36 +73,36 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{locales.announcement_dialog.title}</DialogTitle>
+          <DialogTitle>{i18n.announcement_dialog.title}</DialogTitle>
           <DialogDescription>
-            {locales.announcement_dialog.description}
+            {i18n.announcement_dialog.description}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleCreate} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">{locales.announcement_dialog.label_title}</Label>
+            <Label htmlFor="title">{i18n.announcement_dialog.label_title}</Label>
             <Input id="title" value={title} onChange={e => setTitle(e.target.value)} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="body">{locales.announcement_dialog.label_message}</Label>
+            <Label htmlFor="body">{i18n.announcement_dialog.label_message}</Label>
             <Textarea id="body" value={body} onChange={e => setBody(e.target.value)} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{locales.announcement_dialog.label_priority}</Label>
+              <Label>{i18n.announcement_dialog.label_priority}</Label>
               <Select value={priority} onValueChange={(v: any) => setPriority(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="info">{locales.status.info}</SelectItem>
-                  <SelectItem value="important">{locales.status.important}</SelectItem>
-                  <SelectItem value="urgent">{locales.status.urgent}</SelectItem>
+                  <SelectItem value="info">{i18n.status.info}</SelectItem>
+                  <SelectItem value="important">{i18n.status.important}</SelectItem>
+                  <SelectItem value="urgent">{i18n.status.urgent}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{locales.announcement_dialog.label_scope}</Label>
+              <Label>{i18n.announcement_dialog.label_scope}</Label>
               <Select value={scope} onValueChange={(v: any) => setScope(v)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -116,10 +118,10 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
 
           {scope === "faculty" && data && (
             <div className="space-y-2">
-              <Label>{locales.announcement_dialog.label_faculty}</Label>
+              <Label>{i18n.announcement_dialog.label_faculty}</Label>
               <Select value={targetId} onValueChange={setTargetId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={locales.announcement_dialog.placeholder_faculty} />
+                  <SelectValue placeholder={i18n.announcement_dialog.placeholder_faculty} />
                 </SelectTrigger>
                 <SelectContent>
                   {data.faculties.map(f => (
@@ -132,13 +134,13 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
 
           {scope === "course" && data && (
             <div className="space-y-2">
-              <Label>{locales.announcement_dialog.label_course}</Label>
+              <Label>{i18n.announcement_dialog.label_course}</Label>
               <Select value={targetId} onValueChange={setTargetId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={locales.announcement_dialog.placeholder_course} />
+                  <SelectValue placeholder={i18n.announcement_dialog.placeholder_course} />
                 </SelectTrigger>
                 <SelectContent>
-                  {data.courses.filter(c => c.teacherId === user?.refId).map(c => (
+                  {data.courses.filter(c => c.teacher_id === teacher?.id).map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -149,7 +151,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {locales.announcement_dialog.submit_button}
+              {i18n.announcement_dialog.submit_button}
             </Button>
           </DialogFooter>
         </form>

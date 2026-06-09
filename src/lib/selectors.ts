@@ -3,12 +3,32 @@ import type { AppData, Student, Teacher, Course, ScheduleSlot, Grade, Announceme
 
 /**
  * Enriches a student object with faculty code and promotion name.
+ * Handles both the new nested structure and flat legacy structure.
  */
 export function enrichStudent(d: AppData, student: Student) {
+  const user = student.user || {
+    first_name: "",
+    last_name: "",
+    middle_name: "",
+    gender: "M",
+    email: ""
+  }
+
+  const promotion = student.promotion || d.promotions.find((p) => p.id === student.promotion_id)
+  const faculty = student.faculty || d.faculties.find((f) => f.id === student.faculty_id)
+
   return {
     ...student,
-    facultyCode: d.faculties.find((f) => f.id === student.facultyId)?.code ?? "—",
-    promotionName: d.promotions.find((p) => p.id === student.promotionId)?.name ?? "—",
+    first_name: user.first_name,
+    family_name: user.middle_name || "",
+    last_name: user.last_name,
+    gender: user.gender,
+    email: user.email,
+    phone_number: student.phone_number || "",
+    faculty_id: student.faculty_id || "",
+    promotion_id: student.promotion_id || "",
+    facultyCode: faculty?.code || "—",
+    promotionName: promotion?.name || "—",
   }
 }
 
@@ -23,15 +43,15 @@ export function getEnrichedStudents(d: AppData) {
  * Enriches a course object with promotion name, teacher info and schedules.
  */
 export function enrichCourse(d: AppData, course: Course) {
-  const promotion = d.promotions.find((p) => p.id === course.promotionId)
-  const teacher = d.teachers.find((t) => t.id === course.teacherId)
-  const room = d.rooms.find(r => r.id === course.roomId)
-  const schedules = d.schedules.filter(s => s.courseId === course.id)
+  const promotion = d.promotions.find((p) => p.id === course.promotion_id)
+  const teacher = d.teachers.find((t) => t.id === course.teacher_id)
+  const room = d.rooms.find(r => r.id === (course as any).roomId) // roomId might be in schedules or separate
+  const schedules = d.schedules.filter(s => s.course_id === course.id)
 
   return {
     ...course,
     promotionName: promotion?.name ?? "—",
-    teacherName: teacher ? `${teacher.firstName} ${teacher.familyName} ${teacher.lastName}` : "Non attribué",
+    teacherName: teacher ? `${teacher.user?.first_name} ${teacher.user?.last_name}` : "Non attribué",
     teacherTitle: teacher?.title ?? "",
     roomName: room?.name ?? "Non attribuée",
     schedules
@@ -48,7 +68,7 @@ export function getEnrichedCourses(d: AppData) {
 /**
  * Filters announcements by audience and sorts them by date.
  */
-export function getAnnouncementsFor(d: AppData, audience: "student" | "teacher" | "all" | "global") {
+export function getAnnouncementsFor(d: AppData, audience: RoleName | "all" | "global") {
   return d.announcements
     .filter((a) => a.audience === "all" || a.audience === audience)
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -57,17 +77,19 @@ export function getAnnouncementsFor(d: AppData, audience: "student" | "teacher" 
 /**
  * Gets dashboard metrics for a teacher.
  */
-export function getTeacherDashboardData(d: AppData, teacherId: string, todayDayName: string) {
-  const teacher = d.teachers.find((t) => t.id === teacherId) ?? d.teachers[0]
-  const courses = d.courses.filter((c) => c.teacherId === teacher.id)
-  const promotionIds = new Set(courses.map((c) => c.promotionId))
-  const students = d.students.filter((s) => promotionIds.has(s.promotionId))
+export function getTeacherDashboardData(d: AppData, userId?: string, todayDayName?: string) {
+  const teacher = d.teachers.find((t) => t.user_id === userId || t.id === userId)
+  if (!teacher) return null
+  
+  const courses = d.courses.filter((c) => c.teacher_id === teacher.id)
+  const promotionIds = new Set(courses.map((c) => c.promotion_id))
+  const students = d.students.filter((s) => promotionIds.has(s.promotion_id))
   const courseIds = new Set(courses.map((c) => c.id))
   const pendingGrades = d.grades.filter(
-    (g) => courseIds.has(g.courseId) && g.status === "pending",
+    (g) => courseIds.has(g.course_id) && g.status === "pending",
   )
-  const schedules = d.schedules.filter((s) => s.teacherId === teacher.id)
-  const todaySlots = schedules.filter((s) => s.day === todayDayName)
+  const schedules = d.schedules.filter((s) => s.teacher_id === teacher.id)
+  const todaySlots = todayDayName ? schedules.filter((s) => s.day === todayDayName) : []
 
   return { teacher, courses, students, pendingGrades, schedules, todaySlots }
 }
@@ -75,11 +97,13 @@ export function getTeacherDashboardData(d: AppData, teacherId: string, todayDayN
 /**
  * Gets dashboard metrics for a student.
  */
-export function getStudentDashboardData(d: AppData, studentId: string) {
-  const student = d.students.find((s) => s.id === studentId) ?? d.students[0]
-  const courses = d.courses.filter((c) => c.promotionId === student.promotionId)
-  const schedules = d.schedules.filter((s) => s.promotionId === student.promotionId)
-  const grades = d.grades.filter((g) => g.studentId === student.id)
+export function getStudentDashboardData(d: AppData, userId?: string) {
+  const student = d.students.find((s) => s.user_id === userId || s.id === userId)
+  if (!student) return null
+
+  const courses = d.courses.filter((c) => c.promotion_id === student.promotion_id)
+  const schedules = d.schedules.filter((s) => s.promotion_id === student.promotion_id)
+  const grades = d.grades.filter((g) => g.student_id === student.id)
   const announcements = getAnnouncementsFor(d, "student")
   const validated = grades.filter((g) => g.status === "validated").length
 
@@ -96,8 +120,9 @@ export function getApparitoratStats(d: AppData) {
   const pending: any[] = []
 
   d.students.forEach((s) => {
-    if (s.gender === "F") girls++
-    if (s.gender === "M") boys++
+    const user = s.user
+    if (user?.gender === "F") girls++
+    if (user?.gender === "M") boys++
     if (s.status === "pending") {
       pending.push(enrichStudent(d, s))
     }
@@ -109,7 +134,7 @@ export function getApparitoratStats(d: AppData) {
   const byFaculty = d.faculties.map((f) => ({
     name: f.name,
     code: f.code,
-    count: d.students.filter((s) => s.facultyId === f.id).length,
+    count: d.students.filter((s) => s.faculty_id === f.id).length,
   }))
 
   return { total, girls, boys, pendingCount, totalMax, pending, byFaculty }
@@ -125,10 +150,10 @@ export function getSecretariatGeneralDashboardData(d: AppData) {
     id: f.id,
     name: f.name,
     code: f.code,
-    dean: f.dean,
-    studentCount: d.students.filter((s) => s.facultyId === f.id).length,
-    courseCount: d.courses.filter((c) => c.facultyId === f.id).length,
-    teacherCount: d.teachers.filter((t) => t.facultyId === f.id).length,
+    secretary: (f as any).secretary,
+    studentCount: d.students.filter((s) => s.faculty_id === f.id).length,
+    courseCount: d.courses.filter((c) => c.promotion_id && d.promotions.find(p => p.id === c.promotion_id)?.faculty_id === f.id).length,
+    teacherCount: d.teachers.filter((t) => t.faculty_id === f.id).length,
   }))
   const recentAnnouncements = d.announcements
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -150,10 +175,10 @@ export function getSecretariatGeneralDashboardData(d: AppData) {
  */
 export function getFacultyDashboardData(d: AppData, facultyId: string) {
   const faculty = d.faculties.find((f) => f.id === facultyId) ?? d.faculties[0]
-  const promotions = d.promotions.filter((p) => p.facultyId === faculty.id)
-  const students = d.students.filter((s) => s.facultyId === faculty.id)
-  const courses = d.courses.filter((c) => c.facultyId === faculty.id)
-  const teachers = d.teachers.filter((t) => t.facultyId === faculty.id)
+  const promotions = d.promotions.filter((p) => p.faculty_id === faculty.id)
+  const students = d.students.filter((s) => s.faculty_id === faculty.id)
+  const courses = d.courses.filter((c) => d.promotions.find(p => p.id === c.promotion_id)?.faculty_id === faculty.id)
+  const teachers = d.teachers.filter((t) => t.faculty_id === faculty.id)
 
   return { faculties: d.faculties, faculty, promotions, students, courses, teachers }
 }
@@ -170,12 +195,12 @@ export function getRectoratDashboardData(d: AppData) {
   const byFaculty = d.faculties.map((f) => ({
     name: f.code,
     fullName: f.name,
-    etudiants: d.students.filter((s) => s.facultyId === f.id).length,
+    etudiants: d.students.filter((s) => s.faculty_id === f.id).length,
   }))
 
   const recentActivity = [
     {
-      label: "validated_grades_label", // These will be used as keys for locales in the component
+      label: "validated_grades_label", // These will be used as keys for i18n in the component
       value: validatedGrades,
       total: d.grades.length,
       percent: d.grades.length ? Math.round((validatedGrades / d.grades.length) * 100) : 0,

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
-import { addTeacher, generateId, nextTeacherMatricule } from "@/lib/store"
+import { addTeacher, generateId } from "@/lib/store"
 import type { Teacher } from "@/types"
 import { toast } from "sonner"
 
@@ -38,9 +38,9 @@ export function SecretariatGeneralTeachers() {
 
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
-    firstName: "",
-    familyName:  "",
-    lastName: "",
+    first_name: "",
+    family_name:  "",
+    last_name: "",
     description: "",
     email:     "",
     phone:     "",
@@ -58,13 +58,12 @@ export function SecretariatGeneralTeachers() {
   const pending = rows.filter((r) => r.status === "pending").length
 
   function handleAdd() {
-    if (!form.firstName.trim() || !form.familyName.trim() || !form.lastName.trim() || !form.email.trim() || !form.facultyId) return
+    if (!form.first_name.trim() || !form.family_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.facultyId) return
     addTeacher({
-      id:        generateId("t"),
-      matricule: nextTeacherMatricule(),
-      firstName: form.firstName.trim(),
-      familyName: form.familyName.trim(),
-      lastName:  form.lastName.trim(),
+      matricule: `T${generateId()}`,
+      first_name: form.first_name.trim(),
+      family_name: form.family_name.trim(),
+      last_name:  form.last_name.trim(),
       description: form.description.trim(),
       email:     form.email.trim(),
       phone:     form.phone.trim(),
@@ -77,7 +76,7 @@ export function SecretariatGeneralTeachers() {
     // Simulate sending email
     toast.success(`Enseignant ajouté. Un email d'invitation a été envoyé à ${form.email}`)
 
-    setForm({ firstName: "", familyName: "", lastName: "", description: "", email: "", phone: "", facultyId: "", title: titles[0] ?? "Professeur" })
+    setForm({ first_name: "", family_name: "", last_name: "", description: "", email: "", phone: "", facultyId: "", title: titles[0] ?? "Professeur" })
     setOpen(false)
   }
 
@@ -87,7 +86,7 @@ export function SecretariatGeneralTeachers() {
       header: "Enseignant",
       render: (t) => (
         <div className="min-w-0">
-          <p className="font-medium text-foreground">{t.firstName} {t.familyName} {t.lastName}</p>
+          <p className="font-medium text-foreground">{t.first_name} {t.family_name} {t.last_name}</p>
           <p className="font-mono text-xs text-muted-foreground">{t.matricule}</p>
         </div>
       ),
@@ -155,24 +154,24 @@ export function SecretariatGeneralTeachers() {
                 <Label>Nom</Label>
                 <Input
                   placeholder="Nom"
-                  value={form.familyName}
-                  onChange={(e) => setForm((f) => ({ ...f, familyName: e.target.value }))}
+                  value={form.family_name}
+                  onChange={(e) => setForm((f) => ({ ...f, family_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Postnom</Label>
                 <Input
                   placeholder="Postnom"
-                  value={form.lastName}
-                  onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                  value={form.last_name}
+                  onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Prénom</Label>
                 <Input
                   placeholder="Prénom"
-                  value={form.firstName}
-                  onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                  value={form.first_name}
+                  onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
                 />
               </div>
             </div>
@@ -236,7 +235,7 @@ export function SecretariatGeneralTeachers() {
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
             <Button
               onClick={handleAdd}
-              disabled={!form.firstName.trim() || !form.familyName.trim() || !form.lastName.trim() || !form.email.trim() || !form.facultyId}
+              disabled={!form.first_name.trim() || !form.family_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.facultyId}
             >
               Ajouter
             </Button>

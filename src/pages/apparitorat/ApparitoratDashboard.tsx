@@ -6,10 +6,10 @@ import { Loader } from "@/components/ui/Loader"
 import { DataTable, type Column } from "@/components/ui/DataTable"
 import { StatusBadge } from "@/components/ui/StatusBadge"
 import { InscriptionDialog } from "@/pages/apparitorat/InscriptionDialog"
-import { DashboardLayout } from "@/components/DashboardLayout"
+import { DashboardLayout } from "@/components/ui/DashboardLayout"
 import { usePageData } from "@/hooks/usePageData"
 import type { Student } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { getApparitoratStats, enrichStudent } from "@/lib/selectors"
 
 interface PendingRow extends Student {
@@ -25,23 +25,23 @@ export function ApparitoratDashboard() {
   const columns: Column<PendingRow>[] = [
     {
       key: "matricule",
-      header: locales.apparitorat.matricule,
+      header: i18n.apparitorat.matricule,
       render: (s) => <span className="font-mono text-xs">{s.matricule}</span>,
     },
     {
       key: "name",
-      header: locales.apparitorat.student,
+      header: i18n.apparitorat.student,
       render: (s) => (
         <span className="font-medium text-foreground">
-          {s.firstName} {s.familyName} {s.lastName}
+          {s.first_name} {s.family_name} {s.last_name}
         </span>
       ),
     },
-    { key: "faculty", header: locales.apparitorat.faculty, render: (s) => s.facultyCode },
-    { key: "promotion", header: locales.apparitorat.promotion, render: (s) => s.promotionName },
+    { key: "faculty", header: i18n.apparitorat.faculty, render: (s) => s.facultyCode },
+    { key: "promotion", header: i18n.apparitorat.promotion, render: (s) => s.promotionName },
     {
       key: "status",
-      header: locales.apparitorat.status,
+      header: i18n.apparitorat.status,
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
@@ -53,37 +53,37 @@ export function ApparitoratDashboard() {
 
   return (
     <DashboardLayout
-      title={locales.apparitorat.dashboard_title}
-      subtitle={locales.apparitorat.dashboard_subtitle}
+      title={i18n.apparitorat.dashboard_title}
+      subtitle={i18n.apparitorat.dashboard_subtitle}
       action={<InscriptionDialog />}
       stats={
         <>
-          <KPICard title={locales.apparitorat.total_effectif} value={data.total} icon={Users} colorClass="bg-chart-1/10 text-chart-1" subtitle={`${locales.apparitorat.capacity_max}: ${data.totalMax}`} />
-          <KPICard title={locales.apparitorat.girls} value={data.girls} icon={Venus} colorClass="bg-chart-4/10 text-chart-4" />
-          <KPICard title={locales.apparitorat.boys} value={data.boys} icon={Mars} colorClass="bg-chart-5/10 text-chart-5" />
-          <KPICard title={locales.apparitorat.pending} value={data.pendingCount} icon={UserCog} colorClass="bg-chart-3/15 text-chart-3" />
+          <KPICard title={i18n.apparitorat.total_effectif} value={data.total} icon={Users} colorClass="bg-chart-1/10 text-chart-1" subtitle={`${i18n.apparitorat.capacity_max}: ${data.totalMax}`} />
+          <KPICard title={i18n.apparitorat.girls} value={data.girls} icon={Venus} colorClass="bg-chart-4/10 text-chart-4" />
+          <KPICard title={i18n.apparitorat.boys} value={data.boys} icon={Mars} colorClass="bg-chart-5/10 text-chart-5" />
+          <KPICard title={i18n.apparitorat.pending} value={data.pendingCount} icon={UserCog} colorClass="bg-chart-3/15 text-chart-3" />
         </>
       }
     >
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>{locales.apparitorat.pending_folders}</CardTitle>
-          <CardDescription>{locales.apparitorat.pending_folders_desc}</CardDescription>
+          <CardTitle>{i18n.apparitorat.pending_folders}</CardTitle>
+          <CardDescription>{i18n.apparitorat.pending_folders_desc}</CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
             data={data.pending}
             rowKey={(s) => s.id}
-            emptyTitle={locales.apparitorat.empty_pending}
-            emptyDescription={locales.apparitorat.empty_pending_desc}
+            emptyTitle={i18n.apparitorat.empty_pending}
+            emptyDescription={i18n.apparitorat.empty_pending_desc}
           />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>{locales.apparitorat.faculty_distribution}</CardTitle>
+          <CardTitle>{i18n.apparitorat.faculty_distribution}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="divide-y divide-border">

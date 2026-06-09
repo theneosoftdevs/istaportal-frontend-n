@@ -13,9 +13,9 @@ export function StudentSchedule() {
   const { user } = useAuth()
 
   const { data, loading } = usePageData((d) => {
-    const student = d.students.find((s) => s.id === user?.refId) ?? d.students[0]
-    const courses = d.courses.filter((c) => c.promotionId === student.promotionId)
-    const slots   = d.schedules.filter((s) => s.promotionId === student.promotionId)
+    const student = d.students.find((s) => s.user_id === user?.id) ?? d.students[0]
+    const courses = d.courses.filter((c) => c.promotion_id === student.promotion_id)
+    const slots   = d.schedules.filter((s) => s.promotion_id === student.promotion_id)
     return { student, courses, slots }
   })
 
@@ -58,7 +58,7 @@ export function StudentSchedule() {
               <CardContent>
                 <ul className="space-y-3">
                   {daySlots.map((slot: ScheduleSlot) => {
-                    const course = courseOf(slot.courseId) as Course | undefined
+                    const course = courseOf(slot.course_id) as Course | undefined
                     return (
                       <li
                         key={slot.id}

@@ -40,7 +40,7 @@ export function FacultyRecours() {
         const grade = d.grades.find(g => g.id === a.gradeId)
         return {
           ...a,
-          studentName: student ? `${student.firstName} ${student.familyName} ${student.lastName}` : "—",
+          studentName: student ? `${student.first_name} ${student.family_name} ${student.last_name}` : "—",
           courseName: course?.name ?? "—",
           originalScore: grade?.score ?? 0
         }

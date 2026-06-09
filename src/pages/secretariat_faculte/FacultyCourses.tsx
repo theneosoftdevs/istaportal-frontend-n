@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
 import { useAuth } from "@/contexts/AuthContext"
-import { updateCourseAssignment, addScheduleSlot, removeScheduleSlot } from "@/lib/store"
+import { assignCourseToTeacher, addScheduleSlot, removeScheduleSlot } from "@/lib/store"
 import { enrichCourse } from "@/lib/selectors"
 import type { Course, ScheduleSlot } from "@/types"
 import { toast } from "sonner"
@@ -69,7 +69,7 @@ export function FacultyCourses() {
 
   function handleAssignTeacher() {
     if (!assignTeacherTarget || !selectedTeacherId) return
-    updateCourseAssignment(assignTeacherTarget.id, selectedTeacherId, assignTeacherTarget.roomId)
+    assignCourseToTeacher(assignTeacherTarget.id, selectedTeacherId)
     setAssignTeacherTarget(null)
     setSelectedTeacherId("")
     toast.success("Enseignant mis à jour")
@@ -288,7 +288,7 @@ export function FacultyCourses() {
                   <SelectContent>
                     {teachersForDialog.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
-                        {t.firstName} {t.familyName} {t.lastName}
+                        {t.first_name} {t.family_name} {t.last_name}
                         <span className="ml-1 text-muted-foreground">({t.title})</span>
                       </SelectItem>
                     ))}

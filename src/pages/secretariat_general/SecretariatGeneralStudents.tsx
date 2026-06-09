@@ -16,7 +16,7 @@ import {
 import { usePageData } from "@/hooks/usePageData"
 import type { Student } from "@/types"
 import { EditStudentDialog } from "@/pages/apparitorat/EditStudentDialog"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface StudentRow extends Student {
   facultyCode: string
@@ -45,7 +45,7 @@ export function SecretariatGeneralStudents() {
     return data.students.filter((s) => {
       const matchQ =
         !q ||
-        [s.firstName, s.familyName, s.lastName, s.matricule, s.email].join(" ").toLowerCase().includes(q)
+        [s.first_name, s.family_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
       const matchF = faculty === "all" || s.facultyId === faculty
       const matchP = promotion === "all" || s.promotionId === promotion
       const matchS = status === "all" || s.status === status
@@ -56,26 +56,26 @@ export function SecretariatGeneralStudents() {
   const columns: Column<StudentRow>[] = [
     {
       key: "matricule",
-      header: locales.apparitorat.matricule,
+      header: i18n.apparitorat.matricule,
       render: (s) => <span className="font-mono text-xs">{s.matricule}</span>,
     },
     {
       key: "name",
-      header: locales.apparitorat.student_label,
+      header: i18n.apparitorat.student_label,
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.firstName} {s.familyName} {s.lastName}
+            {s.first_name} {s.family_name} {s.last_name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
       ),
     },
-    { key: "faculty", header: locales.apparitorat.faculty, render: (s) => s.facultyCode },
-    { key: "promotion", header: locales.apparitorat.promotion, render: (s) => s.promotionName },
+    { key: "faculty", header: i18n.apparitorat.faculty, render: (s) => s.facultyCode },
+    { key: "promotion", header: i18n.apparitorat.promotion, render: (s) => s.promotionName },
     {
       key: "status",
-      header: locales.apparitorat.status,
+      header: i18n.apparitorat.status,
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
@@ -89,7 +89,7 @@ export function SecretariatGeneralStudents() {
       align: "right",
       render: (s) => (
         <Button variant="outline" size="sm" onClick={() => setEditingStudent(s)}>
-          {locales.apparitorat.modify_button}
+          {i18n.apparitorat.modify_button}
         </Button>
       ),
     },
@@ -114,16 +114,16 @@ export function SecretariatGeneralStudents() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={locales.apparitorat.search_placeholder}
+            placeholder={i18n.apparitorat.search_placeholder}
             className="pl-9"
           />
         </div>
         <Select value={faculty} onValueChange={(v) => { setFaculty(v); setPromotion("all") }}>
           <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.faculty} />
+            <SelectValue placeholder={i18n.apparitorat.faculty} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_faculties}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_faculties}</SelectItem>
             {data?.faculties.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
@@ -133,10 +133,10 @@ export function SecretariatGeneralStudents() {
         </Select>
         <Select value={promotion} onValueChange={setPromotion}>
           <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.promotion} />
+            <SelectValue placeholder={i18n.apparitorat.promotion} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_promotions}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_promotions}</SelectItem>
             {data?.promotions
               .filter(p => faculty === "all" || p.facultyId === faculty)
               .map((p) => (
@@ -148,16 +148,16 @@ export function SecretariatGeneralStudents() {
         </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="flex-1 sm:w-36 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.status} />
+            <SelectValue placeholder={i18n.apparitorat.status} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_status}</SelectItem>
-            <SelectItem value="active">{locales.apparitorat.status_active}</SelectItem>
-            <SelectItem value="pending">{locales.apparitorat.status_pending}</SelectItem>
-            <SelectItem value="suspended">{locales.apparitorat.status_suspended}</SelectItem>
-            <SelectItem value="finished">{locales.apparitorat.status_finished}</SelectItem>
-            <SelectItem value="dropped">{locales.apparitorat.status_dropped}</SelectItem>
-            <SelectItem value="excluded">{locales.apparitorat.status_excluded}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_status}</SelectItem>
+            <SelectItem value="active">{i18n.apparitorat.status_active}</SelectItem>
+            <SelectItem value="pending">{i18n.apparitorat.status_pending}</SelectItem>
+            <SelectItem value="suspended">{i18n.apparitorat.status_suspended}</SelectItem>
+            <SelectItem value="finished">{i18n.apparitorat.status_finished}</SelectItem>
+            <SelectItem value="dropped">{i18n.apparitorat.status_dropped}</SelectItem>
+            <SelectItem value="excluded">{i18n.apparitorat.status_excluded}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -167,8 +167,8 @@ export function SecretariatGeneralStudents() {
         data={filtered}
         rowKey={(s) => s.id}
         loading={loading}
-        emptyTitle={locales.apparitorat.no_student_found}
-        emptyDescription={locales.apparitorat.no_student_found_desc}
+        emptyTitle={i18n.apparitorat.no_student_found}
+        emptyDescription={i18n.apparitorat.no_student_found_desc}
       />
     </>
   )

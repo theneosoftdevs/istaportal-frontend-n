@@ -1,81 +1,87 @@
 // src/types.ts
 
-export type Role =
+export type RoleName =
   | "student"
   | "teacher"
   | "apparitorat"
   | "secretariat_faculte"
   | "secretariat_general"
   | "rectorat"
+  | "section"
+
+export interface Role {
+  id: number
+  nom: RoleName
+}
 
 export interface User {
-  id: string
-  firstName: string
-  familyName: string
-  lastName: string
+  id: string // UUID
+  first_name: string
+  middle_name?: string
+  last_name: string
+  gender: "M" | "F"
   email: string
+  role_id: number
   role: Role
-  facultyId?: string
+  is_active: boolean
+  created_at: string
+  updated_at?: string
+  // UI helper fields (if needed)
   avatar?: string
-  refId?: string
-  phone?: string
-  description?: string
+  token?: string
+  token_type?: string
 }
 
 export interface Faculty {
   id: string
   name: string
   code: string
-  dean: string
-  studentCount: number
+  promotion_id?: string
+  secretariat_faculte_id?: string
+  // Preloads
+  promotion?: Promotion
 }
 
 export interface Promotion {
   id: string
   name: string
-  facultyId: string
-  level: string
-  studentCount: number
+  faculty_id?: string
+  // Preloads
+  faculty?: Faculty
 }
 
 export interface Student {
   id: string
+  user_id: string
   matricule: string
-  firstName: string
-  familyName: string
-  lastName: string
-  birthDate: string
-  email: string
-  phone: string
-  gender: "M" | "F"
-  promotionId: string
-  facultyId: string
-  status: "active" | "suspended" | "excluded" | "pending"
-  enrollmentDate: string
-  average: number
+  birth_date: string
+  phone_number: string
+  promotion_id: string
+  faculty_id?: string
+  // Preloads
+  user?: User
+  promotion?: Promotion
+  faculty?: Faculty
+  // UI helpers
+  status?: "active" | "suspended" | "excluded" | "pending"
 }
 
 export interface Teacher {
   id: string
+  user_id: string
   matricule: string
-  firstName: string
-  familyName: string
-  lastName: string
-  email: string
-  phone: string
-  facultyId: string
   title: string
-  courseIds: string[]
-  status: "active" | "pending"
-  description?: string
+  faculty_id: string
+  // Preloads
+  user?: User
+  faculty?: Faculty
 }
 
 export interface Room {
   id: string
   name: string
   capacity: number
-  description: string
-  category: "Laboratoire" | "Salle de cours" | "Auditoire"
+  type: "auditoire" | "labo" | "salle decoference"
 }
 
 export interface Course {
@@ -83,18 +89,19 @@ export interface Course {
   code: string
   name: string
   credits: number
-  facultyId: string
-  promotionId: string
-  teacherId: string
-  roomId?: string
   hours: number
+  promotion_id: string
+  teacher_id?: string
+  // Preloads
+  promotion?: Promotion
+  teacher?: Teacher
 }
 
 export interface ScheduleSlot {
   id: string
-  courseId: string
-  promotionId: string
-  teacherId: string
+  course_id: string
+  promotion_id: string
+  teacher_id: string
   day: "Lundi" | "Mardi" | "Mercredi" | "Jeudi" | "Vendredi" | "Samedi"
   start: string
   end: string
@@ -105,9 +112,9 @@ export interface ScheduleSlot {
 
 export interface Grade {
   id: string
-  studentId: string
-  courseId: string
-  promotionId: string
+  student_id: string
+  course_id: string
+  promotion_id: string
   score: number
   status: "validated" | "pending" | "rejected"
   session: string
@@ -214,7 +221,7 @@ export type StatusValue =
   | "urgent"
 
 export interface PortalInfo {
-  role: Role
+  role: RoleName
   label: string
   description: string
 }

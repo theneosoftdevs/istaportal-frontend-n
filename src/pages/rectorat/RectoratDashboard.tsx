@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Loader } from "@/components/ui/Loader"
 import { usePageData } from "@/hooks/usePageData"
 import { useAuth } from "@/contexts/AuthContext"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { getRectoratDashboardData } from "@/lib/selectors"
 import { cn } from "@/lib/utils"
 import {
@@ -29,41 +29,41 @@ export function RectoratDashboard() {
 
   if (loading || !data) return <Loader fullHeight />
 
-  const userName = user ? `${user.firstName} ${user.familyName} ${user.lastName}` : locales.rectorat.fallback_name
+  const userName = user ? `${user.first_name} ${user.family_name} ${user.last_name || ""}`.trim() : i18n.rectorat.fallback_name
 
   return (
     <>
       <PageHeader
-        title={`${locales.common.greeting}, ${userName}`}
-        subtitle={locales.rectorat.title_desc}
+        title={`${i18n.common.greeting}, ${userName}`}
+        subtitle={i18n.rectorat.title_desc}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          title={locales.rectorat.students}
+          title={i18n.rectorat.students}
           value={data.totalStudents}
-          subtitle={`${data.activeStudents} ${locales.rectorat.active_students}`}
+          subtitle={`${data.activeStudents} ${i18n.rectorat.active_students}`}
           icon={Users}
           colorClass="bg-chart-1/10 text-chart-1"
         />
         <KPICard
-          title={locales.rectorat.faculties}
+          title={i18n.rectorat.faculties}
           value={data.totalFaculties}
-          subtitle={locales.rectorat.academic_entities}
+          subtitle={i18n.rectorat.academic_entities}
           icon={GraduationCap}
           colorClass="bg-chart-2/10 text-chart-2"
         />
         <KPICard
-          title={locales.rectorat.active_courses}
+          title={i18n.rectorat.active_courses}
           value={data.totalCourses}
-          subtitle={locales.common.semester}
+          subtitle={i18n.common.semester}
           icon={BookOpen}
           colorClass="bg-chart-4/10 text-chart-4"
         />
         <KPICard
-          title={locales.rectorat.pending_grades}
+          title={i18n.rectorat.pending_grades}
           value={data.pendingGrades}
-          subtitle={`${data.validatedGrades} ${locales.rectorat.validated}`}
+          subtitle={`${data.validatedGrades} ${i18n.rectorat.validated}`}
           icon={TrendingUp}
           colorClass="bg-chart-3/15 text-chart-3"
         />
@@ -72,8 +72,8 @@ export function RectoratDashboard() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>{locales.rectorat.students_by_faculty}</CardTitle>
-            <CardDescription>{locales.rectorat.students_enrolled}</CardDescription>
+            <CardTitle>{i18n.rectorat.students_by_faculty}</CardTitle>
+            <CardDescription>{i18n.rectorat.students_enrolled}</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
@@ -97,7 +97,7 @@ export function RectoratDashboard() {
                     return item?.fullName ?? label
                   }}
                 />
-                <Bar dataKey="etudiants" name={locales.rectorat.students} radius={[4, 4, 0, 0]}>
+                <Bar dataKey="etudiants" name={i18n.rectorat.students} radius={[4, 4, 0, 0]}>
                   {data.byFaculty.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -109,14 +109,14 @@ export function RectoratDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{locales.rectorat.key_indicators}</CardTitle>
+            <CardTitle>{i18n.rectorat.key_indicators}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {data.recentActivity.map((item) => (
               <div key={item.label} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {locales.rectorat[item.label as keyof typeof locales.rectorat]}
+                    {i18n.rectorat[item.label as keyof typeof i18n.rectorat]}
                   </span>
                   <span className="font-semibold text-foreground">
                     {item.value}/{item.total}

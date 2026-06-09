@@ -23,9 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
+import { useAuth } from "@/contexts/AuthContext"
 import { resolveGradeAppeal } from "@/lib/store"
 import type { GradeAppeal } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface AppealRow extends GradeAppeal {
   studentName: string
@@ -41,6 +42,7 @@ const STATUS_CONFIG = {
 
 export function SecretariatGeneralRecours() {
   const store = useStore()
+  const { role } = useAuth()
   const [statusFilter, setStatusFilter] = useState<"all" | GradeAppeal["status"]>("all")
   const [resolveTarget, setResolveTarget] = useState<AppealRow | null>(null)
   const [decision, setDecision] = useState<"approved" | "rejected">("approved")
@@ -52,7 +54,7 @@ export function SecretariatGeneralRecours() {
     const grade = store.grades.find((g) => g.id === a.gradeId)
     return {
       ...a,
-      studentName: student ? `${student.firstName} ${student.familyName} ${student.lastName}` : a.studentId,
+      studentName: student ? `${student.first_name} ${student.family_name} ${student.last_name}` : a.studentId,
       courseName: course?.name ?? "Cours",
       currentScore: grade?.score ?? 0,
     }
@@ -72,16 +74,18 @@ export function SecretariatGeneralRecours() {
     setResponse("")
   }
 
+  const canResolve = role === "secretariat_general"
+
   return (
     <>
       <div className="flex flex-wrap gap-3 items-center">
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
           <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.all_status} />
+            <SelectValue placeholder={i18n.apparitorat.all_status} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_status}</SelectItem>
-            <SelectItem value="pending">{locales.apparitorat.status_pending}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_status}</SelectItem>
+            <SelectItem value="pending">{i18n.apparitorat.status_pending}</SelectItem>
             <SelectItem value="approved">Approuvés</SelectItem>
             <SelectItem value="rejected">Rejetés</SelectItem>
           </SelectContent>
@@ -157,7 +161,7 @@ export function SecretariatGeneralRecours() {
                     <p className="text-sm text-foreground">{a.response}</p>
                   </div>
                 )}
-                {a.status === "pending" && (
+                {a.status === "pending" && canResolve && (
                   <Button
                     variant="outline"
                     size="sm"

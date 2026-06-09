@@ -1,7 +1,7 @@
 // src/components/ui/StatusBadge.tsx
 import { cn } from "@/lib/utils"
 import type { StatusValue } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface StatusBadgeProps {
   status: StatusValue | string
@@ -9,14 +9,14 @@ interface StatusBadgeProps {
 }
 
 const CONFIG: Record<string, { label: string; classes: string }> = {
-  active: { label: locales.status.active, classes: "bg-success/12 text-success border-success/25" },
-  validated: { label: locales.status.validated, classes: "bg-success/12 text-success border-success/25" },
-  pending: { label: locales.status.pending, classes: "bg-warning/15 text-warning-foreground border-warning/30" },
-  important: { label: locales.status.important, classes: "bg-warning/15 text-warning-foreground border-warning/30" },
-  suspended: { label: locales.status.suspended, classes: "bg-destructive/12 text-destructive border-destructive/25" },
-  rejected: { label: locales.status.rejected, classes: "bg-destructive/12 text-destructive border-destructive/25" },
-  urgent: { label: locales.status.urgent, classes: "bg-destructive/12 text-destructive border-destructive/25" },
-  info: { label: locales.status.info, classes: "bg-primary/10 text-primary border-primary/25" },
+  active: { label: i18n.status.active, classes: "bg-success/12 text-success border-success/25" },
+  validated: { label: i18n.status.validated, classes: "bg-success/12 text-success border-success/25" },
+  pending: { label: i18n.status.pending, classes: "bg-warning/15 text-warning-foreground border-warning/30" },
+  important: { label: i18n.status.important, classes: "bg-warning/15 text-warning-foreground border-warning/30" },
+  suspended: { label: i18n.status.suspended, classes: "bg-destructive/12 text-destructive border-destructive/25" },
+  rejected: { label: i18n.status.rejected, classes: "bg-destructive/12 text-destructive border-destructive/25" },
+  urgent: { label: i18n.status.urgent, classes: "bg-destructive/12 text-destructive border-destructive/25" },
+  info: { label: i18n.status.info, classes: "bg-primary/10 text-primary border-primary/25" },
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {

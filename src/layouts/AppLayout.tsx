@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useNavigation } from "@/hooks/use-navigation"
 import { cn, getInitials } from "@/lib/utils"
 import { useState } from "react"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 export function AppLayout() {
   const { theme, toggleTheme, portal } = useApp()
@@ -31,7 +31,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const navMode = useNavigation()
 
-  const userName = user ? `${user.firstName} ${user.familyName} ${user.lastName}` : ""
+  const userName = user ? `${user.first_name} ${user.family_name} ${user.last_name || ""}`.trim() : ""
 
   const handleLogout = () => {
     logout()
@@ -62,7 +62,7 @@ export function AppLayout() {
             <h2 className="text-lg font-black tracking-tighter text-foreground uppercase italic">ISTA PORTAL</h2>
             <div className="h-4 w-px bg-border mx-1" />
             <p className="text-xs font-bold uppercase tracking-widest text-primary">
-              {portal?.role && locales.portals[portal.role as keyof typeof locales.portals]}
+              {portal?.role && i18n.portals[portal.role as keyof typeof i18n.portals]}
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export function AppLayout() {
                     size="icon"
                     asChild
                   >
-                    <Link to="/communications" aria-label={locales.common.announcements}>
+                    <Link to="/communications" aria-label={i18n.common.announcements}>
                       <div className="relative">
                         <Bell className="size-5" />
                         <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2 rounded-full bg-destructive" />
@@ -84,7 +84,7 @@ export function AppLayout() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {locales.common.announcements}
+                  {i18n.common.announcements}
                 </TooltipContent>
               </Tooltip>
 
@@ -94,13 +94,13 @@ export function AppLayout() {
                     variant="ghost"
                     size="icon"
                     onClick={toggleTheme}
-                    aria-label={theme === "dark" ? locales.common.light_mode : locales.common.dark_mode}
+                    aria-label={theme === "dark" ? i18n.common.light_mode : i18n.common.dark_mode}
                   >
                     {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {theme === "dark" ? locales.common.light_mode : locales.common.dark_mode}
+                  {theme === "dark" ? i18n.common.light_mode : i18n.common.dark_mode}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -109,11 +109,11 @@ export function AppLayout() {
               <DropdownMenuTrigger asChild>
                 <button
                   className="flex items-center gap-2 rounded-full p-0.5 pr-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  aria-label={locales.common.user_menu}
+                  aria-label={i18n.common.user_menu}
                 >
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-primary/10 text-xs font-black text-primary uppercase">
-                      {user ? getInitials(user.firstName, user.familyName, user.lastName) : "?"}
+                      {user ? getInitials(user.first_name, user.family_name, user.last_name || "") : "?"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden text-xs font-bold text-foreground sm:inline uppercase tracking-tight">
@@ -132,12 +132,12 @@ export function AppLayout() {
                 <DropdownMenuItem asChild>
                   <Link to="/settings" className="flex w-full items-center">
                     <Settings className="size-4" />
-                    {locales.settings.settings_title}
+                    {i18n.settings.settings_title}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                   <LogOut className="size-4" />
-                  {locales.settings.logout}
+                  {i18n.settings.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

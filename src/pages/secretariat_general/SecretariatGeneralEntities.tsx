@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { usePageData, useStore } from "@/hooks/usePageData"
+import { facultyApi, promotionApi } from "@/api/endpoints/academic"
 import { addFaculty, addPromotion, generateId } from "@/lib/store"
 import { toast } from "sonner"
 import type { Promotion } from "@/types"
@@ -39,15 +40,13 @@ export function SecretariatGeneralEntities() {
 
   // Faculty Form
   const [facOpen, setFacOpen] = useState(false)
-  const [facForm, setFacForm] = useState({ name: "", code: "", dean: "" })
+  const [facForm, setFacForm] = useState({ name: "", code: "" })
 
   // Promotion Form
   const [promOpen, setPromOpen] = useState(false)
   const [promForm, setPromForm] = useState({
     name: "",
-    level: "1",
     facultyId: "",
-    studentCount: 50
   })
 
   const { data: faculties, loading: facLoading } = usePageData((d) => {
@@ -63,42 +62,44 @@ export function SecretariatGeneralEntities() {
 
   const promotionRows: PromotionRow[] = store.promotions.map(p => ({
     ...p,
-    facultyName: store.faculties.find(f => f.id === p.facultyId)?.name ?? "—"
+    facultyName: p.faculty?.name || store.faculties.find(f => f.id === p.facultyId)?.name || "—"
   }))
 
-  const handleAddFaculty = () => {
+  const handleAddFaculty = async () => {
     if (!facForm.name || !facForm.code) return
-    addFaculty({
-      id: generateId("f"),
-      name: facForm.name,
-      code: facForm.code,
-      dean: facForm.dean || "À désigner",
-      studentCount: 0
-    })
-    toast.success("Faculté ajoutée avec succès")
-    setFacForm({ name: "", code: "", dean: "" })
-    setFacOpen(false)
+    try {
+      await facultyApi.create({
+        name: facForm.name,
+        code: facForm.code
+      })
+      toast.success("Faculté ajoutée avec succès")
+      setFacForm({ name: "", code: "" })
+      setFacOpen(false)
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la création")
+    }
   }
 
-  const handleAddPromotion = () => {
+  const handleAddPromotion = async () => {
     if (!promForm.name || !promForm.facultyId) return
-    addPromotion({
-      id: generateId("p"),
-      name: promForm.name,
-      level: promForm.level,
-      facultyId: promForm.facultyId,
-      studentCount: promForm.studentCount
-    })
-    toast.success("Promotion créée avec succès")
-    setPromForm({ name: "", level: "1", facultyId: "", studentCount: 50 })
-    setPromOpen(false)
+    try {
+      await promotionApi.create({
+        name: promForm.name,
+        faculty_id: promForm.facultyId
+      })
+      toast.success("Promotion créée avec succès")
+      setPromForm({ name: "", facultyId: "" })
+      setPromOpen(false)
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la création")
+    }
   }
 
   const promColumns: Column<PromotionRow>[] = [
     { key: "name", header: "Promotion", render: p => <span className="font-medium">{p.name}</span> },
-    { key: "level", header: "Niveau", render: p => `Année ${p.level}` },
     { key: "faculty", header: "Faculté", render: p => p.facultyName },
-    { key: "capacity", header: "Capacité", render: p => p.studentCount },
   ]
 
   if (facLoading || !faculties) return <Loader fullHeight />
@@ -147,8 +148,13 @@ export function SecretariatGeneralEntities() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Doyen :</span> {f.dean}
+                    <div className="space-y-1">
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Promotion :</span> {f.promotion?.name || "Non spécifiée"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Secrétaire de Faculté :</span> {f.secretary ? `${f.secretary.first_name} ${f.secretary.last_name}` : "Non assigné"}
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-lg bg-muted/50 p-3">
@@ -197,10 +203,6 @@ export function SecretariatGeneralEntities() {
               <Label>Code / Sigle</Label>
               <Input value={facForm.code} onChange={e => setFacForm(f => ({ ...f, code: e.target.value }))} placeholder="ex: INFO" />
             </div>
-            <div className="space-y-2">
-              <Label>Doyen</Label>
-              <Input value={facForm.dean} onChange={e => setFacForm(f => ({ ...f, dean: e.target.value }))} placeholder="Nom du Doyen" />
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFacOpen(false)}>Annuler</Button>
@@ -217,23 +219,6 @@ export function SecretariatGeneralEntities() {
             <div className="space-y-2">
               <Label>Nom de la promotion</Label>
               <Input value={promForm.name} onChange={e => setPromForm(f => ({ ...f, name: e.target.value }))} placeholder="ex: L1 Informatique" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Niveau</Label>
-                <Select value={promForm.level} onValueChange={v => setPromForm(f => ({ ...f, level: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["L1", "L2", "L3", "M1", "M2"].map(l => (
-                      <SelectItem key={l} value={l}>{l}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Capacité</Label>
-                <Input type="number" value={promForm.studentCount} onChange={e => setPromForm(f => ({ ...f, studentCount: parseInt(e.target.value) }))} />
-              </div>
             </div>
             <div className="space-y-2">
               <Label>Faculté</Label>

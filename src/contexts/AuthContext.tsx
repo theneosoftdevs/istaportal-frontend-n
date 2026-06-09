@@ -11,14 +11,17 @@ import {
   useState,
 } from "react"
 import type { ReactNode } from "react"
-import { authApi, ApiError } from "@/lib/api"
-import type { Role, User } from "@/types"
+import { authApi } from "@/api/endpoints/auth"
+import { ApiError } from "@/api/client"
+import type { Role, User, RoleName } from "@/types"
 
 const TOKEN_KEY = "ista-token"
+const USER_KEY = "ista-user"
 
 interface AuthContextValue {
   user: User | null
   role: Role | null
+  roleName: RoleName | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
@@ -29,39 +32,66 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]       = useState<User | null>(null)
+  const [user, setUser]       = useState<User | null>(() => {
+    const stored = localStorage.getItem(USER_KEY)
+    if (!stored || stored === "undefined") return null
+    try {
+      return JSON.parse(stored)
+    } catch (e) {
+      console.error("[Auth] Failed to parse stored user:", e)
+      return null
+    }
+  })
   const [isLoading, setIsLoading] = useState(true)
 
-  // On mount: if a token exists, validate it by calling /auth/me.
-  // This keeps the session alive across page reloads.
+  // On mount: validate the session. 
+  // If your Go backend doesn't have /auth/me, we rely on the stored user object.
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     if (!token) {
+      setUser(null)
+      localStorage.removeItem(USER_KEY)
       setIsLoading(false)
       return
     }
+
+    // Attempt to refresh user data if endpoint exists, otherwise just keep current state
     authApi.me()
-      .then((res) => {
-        setUser(res.user as User)
+      .then((userData) => {
+        if (userData) {
+          setUser(userData)
+          localStorage.setItem(USER_KEY, JSON.stringify(userData))
+        }
       })
-      .catch(() => {
-        // Token is invalid or expired — clear it silently.
-        localStorage.removeItem(TOKEN_KEY)
+      .catch((err) => {
+        console.warn("[Auth] Session validation failed:", err)
+        // If 404, the endpoint might not exist, we keep the local user
+        if (err.status === 404) {
+          console.info("[Auth] /auth/me not found, using local session.")
+        } else {
+          // For other errors (401, etc.), clear session
+          localStorage.removeItem(TOKEN_KEY)
+          localStorage.removeItem(USER_KEY)
+          setUser(null)
+        }
       })
       .finally(() => setIsLoading(false))
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login({ email, password })
-    // api.ts now auto-unwraps the envelope: res = { token, user }
-    localStorage.setItem(TOKEN_KEY, res.token)
-    setUser(res.user as User)
+    if (res.token) {
+      localStorage.setItem(TOKEN_KEY, res.token)
+    }
+    // Ensure we store the user object too
+    localStorage.setItem(USER_KEY, JSON.stringify(res))
+    setUser(res)
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(USER_KEY)
     setUser(null)
-    // Fire-and-forget — no need to await
     authApi.logout().catch(() => {})
   }, [])
 
@@ -72,7 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      role: user ? (user.role as Role) : null,
+      role: user ? (typeof user.role === "object" ? user.role : null) : null,
+      roleName: user ? (typeof user.role === "string" ? user.role : user.role?.nom) : null,
       isAuthenticated: user !== null,
       isLoading,
       login,

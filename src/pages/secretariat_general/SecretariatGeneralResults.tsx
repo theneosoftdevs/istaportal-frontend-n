@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
 import type { Student } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface StudentRow extends Student {
   promotionName: string
@@ -74,11 +74,11 @@ export function SecretariatGeneralResults() {
   const columns: Column<StudentRow>[] = [
     {
       key: "name",
-      header: locales.apparitorat.student_label,
+      header: i18n.apparitorat.student_label,
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.firstName} {s.familyName} {s.lastName}
+            {s.first_name} {s.family_name} {s.last_name}
           </p>
           <p className="font-mono text-xs text-muted-foreground">{s.matricule}</p>
         </div>
@@ -86,7 +86,7 @@ export function SecretariatGeneralResults() {
     },
     {
       key: "promotion",
-      header: locales.apparitorat.promotion,
+      header: i18n.apparitorat.promotion,
       render: (s) => (
         <div>
           <p className="text-sm text-foreground">{s.promotionName}</p>
@@ -131,10 +131,10 @@ export function SecretariatGeneralResults() {
           }}
         >
           <SelectTrigger className="flex-1 sm:w-56 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.all_faculties} />
+            <SelectValue placeholder={i18n.apparitorat.all_faculties} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_faculties}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_faculties}</SelectItem>
             {store.faculties.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
@@ -144,10 +144,10 @@ export function SecretariatGeneralResults() {
         </Select>
         <Select value={promotionFilter} onValueChange={setPromotionFilter}>
           <SelectTrigger className="flex-1 sm:w-56 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.all_promotions} />
+            <SelectValue placeholder={i18n.apparitorat.all_promotions} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_promotions}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_promotions}</SelectItem>
             {filteredPromotions.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name}

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { useStore } from "@/hooks/usePageData"
 import { useCurrentStudent } from "@/hooks/useCurrentUser"
-import { addGradeAppeal, nextAppealId } from "@/lib/store"
+import { addGradeAppeal, generateId } from "@/lib/store"
 import type { Grade } from "@/types"
 import { toast } from "sonner"
 
@@ -34,6 +34,16 @@ interface GradeRow extends Grade {
 export function StudentGrades() {
   const store   = useStore()
   const student = useCurrentStudent(store)
+
+  if (!student || !student.id) {
+    return (
+      <div className="flex flex-col items-center justify-center p-10 text-center">
+        <AlertCircle className="size-10 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-semibold">Profil étudiant non trouvé</h3>
+        <p className="text-muted-foreground max-w-xs">Nous n'avons pas pu charger votre profil académique. Veuillez contacter l'administration.</p>
+      </div>
+    )
+  }
 
   const grades: GradeRow[] = store.grades
     .filter((g) => g.studentId === student.id)
@@ -67,7 +77,7 @@ export function StudentGrades() {
     // Simulate upload
     setTimeout(() => {
       addGradeAppeal({
-        id:        nextAppealId(),
+        id:        generateId(),
         studentId: student.id,
         courseId:  appealGrade.courseId,
         gradeId:   appealGrade.id,
@@ -163,7 +173,7 @@ export function StudentGrades() {
       <PageHeader title="Mes notes" subtitle="Vos résultats par cours et par session." />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KPICard title="Moyenne générale" value={`${student.average.toFixed(1)}/20`} icon={GaugeCircle} colorClass="bg-chart-2/10 text-chart-2" />
+        <KPICard title="Moyenne générale" value={`${(student.average ?? 0).toFixed(1)}/20`} icon={GaugeCircle} colorClass="bg-chart-2/10 text-chart-2" />
         <KPICard title="Notes validées"   value={validated}                           icon={Award}        colorClass="bg-chart-1/10 text-chart-1" />
         <KPICard title="En attente"       value={pending}                             icon={FileClock}    colorClass="bg-chart-3/15 text-chart-3" />
       </div>

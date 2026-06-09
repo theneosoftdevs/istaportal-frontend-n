@@ -6,10 +6,13 @@ import { DataTable, type Column } from "@/components/ui/DataTable"
 import { StatusBadge } from "@/components/ui/StatusBadge"
 import { KPICard } from "@/components/ui/KPICard"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { usePageData } from "@/hooks/usePageData"
 import { useStore } from "@/hooks/usePageData"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InscriptionDialog } from "@/pages/apparitorat/InscriptionDialog"
+import { EditStudentDialog } from "@/pages/apparitorat/EditStudentDialog"
+import { enrichStudent } from "@/lib/selectors"
 import { Users, UserCheck, UserCog } from "lucide-react"
 import type { Student } from "@/types"
 
@@ -18,13 +21,15 @@ export function ApparitoratInscriptions() {
   const [query, setQuery] = useState("")
   const [facultyFilter, setFacultyFilter] = useState("all")
   const [promotionFilter, setPromotionFilter] = useState("all")
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
 
   const { data, loading } = usePageData((d) => {
+    const students = d.students.map(s => enrichStudent(d, s))
     const facultyName = (id: string) => d.faculties.find((f) => f.id === id)?.code ?? "—"
     const promotionName = (id: string) =>
       d.promotions.find((p) => p.id === id)?.name ?? "—"
     return {
-      students: d.students,
+      students,
       facultyName,
       promotionName,
     }
@@ -44,7 +49,7 @@ export function ApparitoratInscriptions() {
     const q = query.trim().toLowerCase()
     if (q) {
       list = list.filter((s) =>
-        [s.firstName, s.familyName, s.lastName, s.matricule, s.email]
+        [s.first_name, s.family_name, s.last_name, s.matricule, s.email]
           .join(" ")
           .toLowerCase()
           .includes(q),
@@ -74,11 +79,16 @@ export function ApparitoratInscriptions() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.firstName} {s.familyName} {s.lastName}
+            {s.first_name} {s.family_name} {s.last_name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
       ),
+    },
+    {
+      key: "phone",
+      header: "Téléphone",
+      render: (s) => <span className="text-xs">{s.phone_number || "—"}</span>,
     },
     {
       key: "faculty",
@@ -106,14 +116,39 @@ export function ApparitoratInscriptions() {
         </div>
       ),
     },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      render: (s) => (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" onClick={() => setEditingStudent(s)}>
+            Modifier
+          </Button>
+        </div>
+      ),
+    },
   ]
 
   return (
     <>
+      <EditStudentDialog
+        student={editingStudent}
+        open={!!editingStudent}
+        onOpenChange={(open) => !open && setEditingStudent(null)}
+      />
       <PageHeader
         title="Inscriptions"
         subtitle="Gestion des inscriptions et du suivi des étudiants."
-        action={<InscriptionDialog />}
+        action={
+          <InscriptionDialog
+            onSuccess={(s) => {
+              setQuery(s.matricule || "")
+              // Optionally reload after a short delay or if reactive, skip reload
+              setTimeout(() => window.location.reload(), 1500)
+            }}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

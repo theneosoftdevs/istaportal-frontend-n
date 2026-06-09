@@ -17,7 +17,7 @@ import { enrichStudent } from "@/lib/selectors"
 import type { Student } from "@/types"
 import { toast } from "sonner"
 import { EditStudentDialog } from "./EditStudentDialog"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { jsPDF } from "jspdf"
 import "jspdf-autotable"
 import ExcelJS from "exceljs"
@@ -45,9 +45,9 @@ export function ApparitoratStudents() {
     return data.students.filter((s) => {
       const matchQ =
         !q ||
-        [s.firstName, s.familyName, s.lastName, s.matricule, s.email].join(" ").toLowerCase().includes(q)
-      const matchF = faculty === "all" || s.facultyId === faculty
-      const matchP = promotion === "all" || s.promotionId === promotion
+        [s.first_name, s.family_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
+      const matchF = faculty === "all" || s.faculty_id === faculty
+      const matchP = promotion === "all" || s.promotion_id === promotion
       const matchS = status === "all" || s.status === status
       return matchQ && matchF && matchP && matchS
     })
@@ -57,10 +57,10 @@ export function ApparitoratStudents() {
     const doc = new jsPDF()
     const promotionName = promotion !== "all"
       ? data?.promotions.find(p => p.id === promotion)?.name
-      : locales.apparitorat.list_type_all
+      : i18n.apparitorat.list_type_all
     const facultyName = faculty !== "all"
       ? data?.faculties.find(f => f.id === faculty)?.name
-      : locales.apparitorat.all_faculties
+      : i18n.apparitorat.all_faculties
 
     const img = new Image()
     img.src = "/ista.jpeg"
@@ -76,7 +76,7 @@ export function ApparitoratStudents() {
   const finalizePDF = (doc: jsPDF, promotionName: string, facultyName: string) => {
     doc.setFontSize(20)
     doc.setTextColor(0, 102, 204)
-    doc.text(locales.apparitorat.university_name, 50, 20)
+    doc.text(i18n.apparitorat.university_name, 50, 20)
 
     doc.setFontSize(10)
     doc.setTextColor(100)
@@ -87,31 +87,31 @@ export function ApparitoratStudents() {
 
     doc.setFontSize(14)
     doc.setTextColor(0)
-    doc.text(locales.apparitorat.student_list.toUpperCase(), 14, 45)
+    doc.text(i18n.apparitorat.student_list.toUpperCase(), 14, 45)
 
     doc.setFontSize(11)
-    doc.text(`${locales.apparitorat.faculty}: ${facultyName}`, 14, 52)
-    doc.text(`${locales.apparitorat.promotion}: ${promotionName}`, 14, 58)
+    doc.text(`${i18n.apparitorat.faculty}: ${facultyName}`, 14, 52)
+    doc.text(`${i18n.apparitorat.promotion}: ${promotionName}`, 14, 58)
     doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 64)
 
     const tableData = filtered.map(s => [
       s.matricule,
-      `${s.firstName} ${s.familyName} ${s.lastName}`,
+      `${s.first_name} ${s.family_name} ${s.last_name}`,
       s.facultyCode,
       s.promotionName,
-      s.phone,
+      s.phone_number || "",
       s.status
     ])
 
     ;(doc as any).autoTable({
       startY: 70,
       head: [[
-        locales.apparitorat.matricule,
-        locales.apparitorat.student_label,
-        locales.apparitorat.faculty,
-        locales.apparitorat.promotion,
-        locales.apparitorat.phone_label,
-        locales.apparitorat.status
+        i18n.apparitorat.matricule,
+        i18n.apparitorat.student_label,
+        i18n.apparitorat.faculty,
+        i18n.apparitorat.promotion,
+        i18n.apparitorat.phone_label,
+        i18n.apparitorat.status
       ]],
       body: tableData,
     })
@@ -123,30 +123,30 @@ export function ApparitoratStudents() {
   const exportToExcel = async () => {
     const promotionName = promotion !== "all"
       ? data?.promotions.find(p => p.id === promotion)?.name
-      : locales.apparitorat.list_type_all
+      : i18n.apparitorat.list_type_all
     const facultyName = faculty !== "all"
       ? data?.faculties.find(f => f.id === faculty)?.name
-      : locales.apparitorat.all_faculties
+      : i18n.apparitorat.all_faculties
 
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet("Students")
 
-    worksheet.addRow([locales.apparitorat.university_name])
+    worksheet.addRow([i18n.apparitorat.university_name])
     worksheet.addRow(["INSTITUT SUPÉRIEUR DES TECHNIQUES APPLIQUÉES"])
     worksheet.addRow([])
-    worksheet.addRow([locales.apparitorat.student_list.toUpperCase()])
-    worksheet.addRow([`${locales.apparitorat.faculty}: ${facultyName}`])
-    worksheet.addRow([`${locales.apparitorat.promotion}: ${promotionName}`])
+    worksheet.addRow([i18n.apparitorat.student_list.toUpperCase()])
+    worksheet.addRow([`${i18n.apparitorat.faculty}: ${facultyName}`])
+    worksheet.addRow([`${i18n.apparitorat.promotion}: ${promotionName}`])
     worksheet.addRow([`Date: ${new Date().toLocaleDateString()}`])
     worksheet.addRow([])
 
     worksheet.addRow([
-      locales.apparitorat.matricule,
-      locales.apparitorat.student_label,
-      locales.apparitorat.faculty,
-      locales.apparitorat.promotion,
-      locales.apparitorat.phone_label,
-      locales.apparitorat.status,
+      i18n.apparitorat.matricule,
+      i18n.apparitorat.student_label,
+      i18n.apparitorat.faculty,
+      i18n.apparitorat.promotion,
+      i18n.apparitorat.phone_label,
+      i18n.apparitorat.status,
     ])
 
     const headerRow = worksheet.lastRow
@@ -161,10 +161,10 @@ export function ApparitoratStudents() {
     filtered.forEach(s => {
       worksheet.addRow([
         s.matricule,
-        `${s.firstName} ${s.familyName} ${s.lastName}`,
+        `${s.first_name} ${s.family_name} ${s.last_name}`,
         s.facultyCode,
         s.promotionName,
-        s.phone,
+        s.phone_number || "",
         s.status,
       ])
     })
@@ -187,27 +187,27 @@ export function ApparitoratStudents() {
   const columns: Column<StudentRow>[] = [
     {
       key: "matricule",
-      header: locales.apparitorat.matricule,
+      header: i18n.apparitorat.matricule,
       render: (s) => <span className="font-mono text-xs">{s.matricule}</span>,
     },
     {
       key: "name",
-      header: locales.apparitorat.student_label,
+      header: i18n.apparitorat.student_label,
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.firstName} {s.familyName} {s.lastName}
+            {s.first_name} {s.family_name} {s.last_name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
       ),
     },
-    { key: "phone", header: locales.apparitorat.phone_label, render: (s) => s.phone },
-    { key: "faculty", header: locales.apparitorat.faculty, render: (s) => s.facultyCode },
-    { key: "promotion", header: locales.apparitorat.promotion, render: (s) => s.promotionName },
+    { key: "phone", header: i18n.apparitorat.phone_label, render: (s) => s.phone_number || "—" },
+    { key: "faculty", header: i18n.apparitorat.faculty, render: (s) => s.facultyCode },
+    { key: "promotion", header: i18n.apparitorat.promotion, render: (s) => s.promotionName },
     {
       key: "status",
-      header: locales.apparitorat.status,
+      header: i18n.apparitorat.status,
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
@@ -221,7 +221,7 @@ export function ApparitoratStudents() {
       align: "right",
       render: (s) => (
         <Button variant="ghost" size="sm" onClick={() => setEditingStudent(s)}>
-          {locales.apparitorat.modify_button}
+          {i18n.apparitorat.modify_button}
         </Button>
       ),
     },
@@ -235,17 +235,17 @@ export function ApparitoratStudents() {
         onOpenChange={(open) => !open && setEditingStudent(null)}
       />
       <PageHeader
-        title={locales.apparitorat.students_title}
-        subtitle={locales.apparitorat.students_subtitle}
+        title={i18n.apparitorat.students_title}
+        subtitle={i18n.apparitorat.students_subtitle}
         action={
           <div className="flex flex-wrap gap-2 sm:flex-nowrap">
             <Button variant="outline" size="sm" onClick={exportToExcel} className="flex-1 sm:flex-none">
               <FileSpreadsheet className="mr-2 size-4 shrink-0" />
-              <span className="truncate">{locales.apparitorat.export_excel}</span>
+              <span className="truncate">{i18n.apparitorat.export_excel}</span>
             </Button>
             <Button variant="outline" size="sm" onClick={exportToPDF} className="flex-1 sm:flex-none">
               <FileDown className="mr-2 size-4 shrink-0" />
-              <span className="truncate">{locales.apparitorat.export_pdf}</span>
+              <span className="truncate">{i18n.apparitorat.export_pdf}</span>
             </Button>
           </div>
         }
@@ -257,17 +257,17 @@ export function ApparitoratStudents() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={locales.apparitorat.search_placeholder}
+            placeholder={i18n.apparitorat.search_placeholder}
             className="pl-9"
-            aria-label={locales.apparitorat.search_aria}
+            aria-label={i18n.apparitorat.search_aria}
           />
         </div>
         <Select value={faculty} onValueChange={(v) => { setFaculty(v); setPromotion("all") }}>
           <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.faculty} />
+            <SelectValue placeholder={i18n.apparitorat.faculty} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_faculties}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_faculties}</SelectItem>
             {data?.faculties.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
@@ -277,12 +277,12 @@ export function ApparitoratStudents() {
         </Select>
         <Select value={promotion} onValueChange={setPromotion}>
           <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.promotion} />
+            <SelectValue placeholder={i18n.apparitorat.promotion} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_promotions}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_promotions}</SelectItem>
             {data?.promotions
-              .filter(p => faculty === "all" || p.facultyId === faculty)
+              .filter(p => faculty === "all" || p.faculty_id === faculty)
               .map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name}
@@ -292,16 +292,16 @@ export function ApparitoratStudents() {
         </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="flex-1 sm:w-36 sm:flex-none">
-            <SelectValue placeholder={locales.apparitorat.status} />
+            <SelectValue placeholder={i18n.apparitorat.status} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{locales.apparitorat.all_status}</SelectItem>
-            <SelectItem value="active">{locales.apparitorat.status_active}</SelectItem>
-            <SelectItem value="pending">{locales.apparitorat.status_pending}</SelectItem>
-            <SelectItem value="suspended">{locales.apparitorat.status_suspended}</SelectItem>
-            <SelectItem value="finished">{locales.apparitorat.status_finished}</SelectItem>
-            <SelectItem value="dropped">{locales.apparitorat.status_dropped}</SelectItem>
-            <SelectItem value="excluded">{locales.apparitorat.status_excluded}</SelectItem>
+            <SelectItem value="all">{i18n.apparitorat.all_status}</SelectItem>
+            <SelectItem value="active">{i18n.apparitorat.status_active}</SelectItem>
+            <SelectItem value="pending">{i18n.apparitorat.status_pending}</SelectItem>
+            <SelectItem value="suspended">{i18n.apparitorat.status_suspended}</SelectItem>
+            <SelectItem value="finished">{i18n.apparitorat.status_finished}</SelectItem>
+            <SelectItem value="dropped">{i18n.apparitorat.status_dropped}</SelectItem>
+            <SelectItem value="excluded">{i18n.apparitorat.status_excluded}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -311,8 +311,8 @@ export function ApparitoratStudents() {
         data={filtered}
         rowKey={(s) => s.id}
         loading={loading}
-        emptyTitle={locales.apparitorat.no_student_found}
-        emptyDescription={locales.apparitorat.no_student_found_desc}
+        emptyTitle={i18n.apparitorat.no_student_found}
+        emptyDescription={i18n.apparitorat.no_student_found_desc}
       />
     </>
   )

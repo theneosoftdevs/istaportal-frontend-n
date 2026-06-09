@@ -19,7 +19,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { markNotificationRead, markAllNotificationsRead } from "@/lib/store"
 import { cn } from "@/lib/utils"
 import type { Notification } from "@/types"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 const TYPE_CONFIG: Record<
   Notification["type"],
@@ -27,22 +27,22 @@ const TYPE_CONFIG: Record<
 > = {
   grade_modified: {
     icon: Star,
-    label: locales.common.type_grade_modified,
+    label: i18n.common.type_grade_modified,
     color: "bg-chart-2/10 text-chart-2",
   },
   new_appeal: {
     icon: AlertCircle,
-    label: locales.common.type_new_appeal,
+    label: i18n.common.type_new_appeal,
     color: "bg-warning/10 text-warning",
   },
   appeal_resolved: {
     icon: CheckCheck,
-    label: locales.common.type_appeal_resolved,
+    label: i18n.common.type_appeal_resolved,
     color: "bg-success/10 text-success",
   },
   course_assigned: {
     icon: BookMarked,
-    label: locales.common.type_course_assigned,
+    label: i18n.common.type_course_assigned,
     color: "bg-chart-5/10 text-chart-5",
   },
 }
@@ -51,35 +51,35 @@ function relativeDate(iso: string) {
   const date = new Date(iso)
   const now = new Date()
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diff < 60) return locales.common.just_now
+  if (diff < 60) return i18n.common.just_now
   if (diff < 3600) return `${Math.floor(diff / 60)} min`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h`
   return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })
 }
 
 export function NotificationsPage() {
-  const { user } = useAuth()
+  const { user, roleName } = useAuth()
   const [activeTab, setActiveTab] = useState("announcements")
   const [dialogOpen, setDialogOpen] = useState(false)
 
-  const canCreate = ["rectorat", "secretariat_general", "apparitorat", "secretariat_faculte", "teacher"].includes(user?.role || "")
+  const canCreate = ["rectorat", "secretariat_general", "apparitorat", "secretariat_faculte", "teacher"].includes(roleName || "")
 
   const { data, loading } = usePageData((d) => {
-    const student = user?.role === "student" ? d.students.find(s => s.id === user.refId) : null
+    const student = roleName === "student" ? d.students.find(s => s.user_id === user?.id) : null
 
     const announcements = d.announcements
       .filter((a) => {
         // Global scope: everyone who matches audience
         if (a.scope === "global") {
-          return a.audience === "all" || a.audience === user?.role
+          return a.audience === "all" || a.audience === roleName
         }
 
         // Faculty scope: students of that faculty
         if (a.scope === "faculty") {
-          if (user?.role === "student") {
-            return student?.facultyId === a.targetId
+          if (roleName === "student") {
+            return student?.faculty_id === a.targetId
           }
-          if (user?.role === "secretariat_faculte") {
+          if (roleName === "secretariat_faculte") {
             // Secretaire of that faculty can see it too
             // Assuming we would check the secretary's faculty here
             return true
@@ -89,14 +89,14 @@ export function NotificationsPage() {
 
         // Course scope: students in that course
         if (a.scope === "course") {
-          if (user?.role === "student") {
+          if (roleName === "student") {
             // Check if student has a grade in this course (as proxy for being in it)
             // or just has access to it.
             return d.grades.some(g => g.studentId === student?.id && g.courseId === a.targetId)
           }
-          if (user?.role === "teacher") {
-            const teacher = d.teachers.find(t => t.id === user.refId)
-            return teacher?.courseIds.includes(a.targetId || "")
+          if (roleName === "teacher") {
+            const teacher = d.teachers.find(t => t.user_id === user?.id)
+            return teacher?.id === a.targetId // Or however courses are linked
           }
           return false
         }
@@ -106,7 +106,7 @@ export function NotificationsPage() {
       .sort((a, b) => b.date.localeCompare(a.date))
     
     const notifications = d.notifications
-      .filter((n) => n.targetRole === user?.role)
+      .filter((n) => n.targetRole === roleName)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
     return { announcements, notifications }
@@ -121,13 +121,13 @@ export function NotificationsPage() {
     <div className="space-y-6 pb-20 sm:pb-0">
       <div className="flex items-center justify-between gap-4">
         <PageHeader
-          title={locales.common.notifications_title}
-          subtitle={locales.common.notifications_subtitle}
+          title={i18n.common.notifications_title}
+          subtitle={i18n.common.notifications_subtitle}
         />
         {canCreate && (
           <Button onClick={() => setDialogOpen(true)} className="gap-2 shrink-0">
             <Plus className="size-4" />
-            <span className="hidden sm:inline">{locales.common.create_announcement}</span>
+            <span className="hidden sm:inline">{i18n.common.create_announcement}</span>
           </Button>
         )}
       </div>
@@ -136,14 +136,14 @@ export function NotificationsPage() {
         <TabsList className="grid w-full grid-cols-2 lg:max-w-md">
           <TabsTrigger value="announcements" className="gap-1.5 px-2 text-xs sm:text-sm">
             <Megaphone className="hidden size-4 sm:block" />
-            {locales.common.announcements_tab}
+            {i18n.common.announcements_tab}
             <Badge variant="secondary" className="ml-0.5 h-5 px-1.5 py-0 text-[10px]">
               {announcements.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1.5 px-2 text-xs sm:text-sm">
             <Bell className="hidden size-4 sm:block" />
-            {locales.common.notifications_tab}
+            {i18n.common.notifications_tab}
             {unreadNotifications > 0 && (
               <Badge variant="destructive" className="ml-0.5 h-5 px-1.5 py-0 text-[10px]">
                 {unreadNotifications}
@@ -168,9 +168,9 @@ export function NotificationsPage() {
                   <Bell className="size-6 text-muted-foreground" />
                 </div>
                 <div className="text-center px-4">
-                  <p className="font-medium text-foreground">{locales.common.no_notifications}</p>
+                  <p className="font-medium text-foreground">{i18n.common.no_notifications}</p>
                   <p className="text-sm text-muted-foreground">
-                    {locales.common.no_notifications_desc}
+                    {i18n.common.no_notifications_desc}
                   </p>
                 </div>
               </CardContent>
@@ -183,10 +183,10 @@ export function NotificationsPage() {
                     variant="ghost"
                     size="sm"
                     className="h-8 gap-1.5 text-xs"
-                    onClick={() => user?.role && markAllNotificationsRead(user.role)}
+                    onClick={() => markAllNotificationsRead()}
                   >
                     <CheckCheck className="size-3.5" />
-                    {locales.common.mark_all_read}
+                    {i18n.common.mark_all_read}
                   </Button>
                 )}
               </div>

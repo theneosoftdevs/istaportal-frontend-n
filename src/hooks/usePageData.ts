@@ -1,54 +1,68 @@
-// src/hooks/usePageData.ts
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { getState, subscribe } from "@/lib/store"
+import { 
+  useFaculties, usePromotions, useStudents, useTeachers, useCourses, 
+  useSchedules, useRooms, useGrades, useAppeals, useAssignments, 
+  useSubmissions, useResources, useAnnouncements, useNotifications
+} from "./api"
+
 import type { AppData } from "@/types"
 
-/** Subscribe to the live in-memory data store (re-renders on mutation). */
-export function useStore(): AppData {
-  return useSyncExternalStore(subscribe, getState, getState)
-}
-
-interface PageDataResult<T> {
-  data: T | null
-  loading: boolean
-  error: string | null
-}
-
-/**
- * Simulates an asynchronous network request reading from the local JSON store.
- * A short artificial delay lets components display loading states.
+/** 
+ * Replaces the old local store. Now fetches data from the real backend APIs.
+ * Note: Since this fetches on every mount, it acts as a transitional layer. 
  */
-export function usePageData<T>(
-  selector: (data: AppData) => T,
-  delay = 600,
-): PageDataResult<T> {
+export function useStore(): AppData {
+  const facultiesData = useFaculties().data || []
+  const promotionsData = usePromotions().data || []
+  const studentsData = useStudents().data || []
+  const teachersData = useTeachers().data || []
+  const coursesData = useCourses().data || []
+  const schedulesData = useSchedules().data || []
+  const roomsData = useRooms().data || []
+  const gradesData = useGrades().data || []
+  const appealsData = useAppeals().data || []
+  const assignmentsData = useAssignments().data || []
+  const submissionsData = useSubmissions().data || []
+  const resourcesData = useResources().data || []
+  const announcementsData = useAnnouncements().data || []
+  const notificationsData = useNotifications().data || []
+
+  return { 
+    faculties: facultiesData, 
+    promotions: (promotionsData.length > 0) 
+      ? promotionsData.map((p) => ({
+          ...p,
+          facultyId: p.faculty_id || p.facultyId || p.faculty?.id || "",
+        }))
+      : facultiesData.filter(f => f.promotion || f.promotion_id).map(f => ({
+          id: f.promotion?.id || f.promotion_id || "",
+          name: f.promotion?.name || `Promotion ${f.code}`,
+          facultyId: f.id,
+          faculty: { id: f.id, name: f.name, code: f.code }
+        })),
+    students: studentsData, 
+    teachers: teachersData, 
+    courses: coursesData, 
+    schedules: schedulesData, 
+    rooms: roomsData, 
+    grades: gradesData, 
+    gradeAppeals: appealsData, 
+    assignments: assignmentsData, 
+    submissions: submissionsData, 
+    courseResources: resourcesData, 
+    announcements: announcementsData, 
+    notifications: notificationsData,
+    users: [],
+    teacherTitles: ["Professeur", "Professeure", "Assistant", "Assistante", "Chef de Travaux", "Maître de Conférences"]
+  }
+}
+
+export function usePageData<T>(selector: (data: AppData) => T) {
   const store = useStore()
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<T | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const selectorRef = useRef(selector)
-  selectorRef.current = selector
-
-  useEffect(() => {
-    let active = true
-    setLoading(true)
-    setError(null)
-    const timer = setTimeout(() => {
-      if (!active) return
-      try {
-        setData(selectorRef.current(store))
-        setLoading(false)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur de chargement")
-        setLoading(false)
-      }
-    }, delay)
-    return () => {
-      active = false
-      clearTimeout(timer)
-    }
-    // Re-run when the underlying store changes
-  }, [store, delay])
-
-  return { data, loading, error }
+  
+  try {
+    const data = selector(store)
+    return { data, loading: false, error: null }
+  } catch (e) {
+    return { data: null, loading: false, error: e instanceof Error ? e.message : "Erreur" }
+  }
 }

@@ -37,7 +37,7 @@ function readStoredTheme(): Theme {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { role } = useAuth()
+  const { roleName } = useAuth()
   const [theme, setTheme] = useState<Theme>(() => readStoredTheme())
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -60,10 +60,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sidebarOpen,
       setSidebarOpen,
       toggleSidebar,
-      nav: role ? NAV_BY_ROLE[role] : [],
-      portal: role ? getPortal(role) : undefined,
+      nav: roleName ? NAV_BY_ROLE[roleName] : [],
+      portal: roleName ? getPortal(roleName) : undefined,
     }
-  }, [theme, toggleTheme, sidebarOpen, toggleSidebar, role])
+  }, [theme, toggleTheme, sidebarOpen, toggleSidebar, roleName])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

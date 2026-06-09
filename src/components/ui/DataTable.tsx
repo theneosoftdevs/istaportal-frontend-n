@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 import { EmptyState } from "@/components/ui/EmptyState"
 import { Loader } from "@/components/ui/Loader"
 import { Inbox } from "lucide-react"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 export interface Column<T> {
   key: string
@@ -43,8 +43,8 @@ export function DataTable<T>({
   data,
   rowKey,
   loading,
-  emptyTitle = locales.common.no_data,
-  emptyDescription = locales.common.no_data_desc,
+  emptyTitle = i18n.common.no_data,
+  emptyDescription = i18n.common.no_data_desc,
   onRowClick,
 }: DataTableProps<T>) {
   if (loading) {

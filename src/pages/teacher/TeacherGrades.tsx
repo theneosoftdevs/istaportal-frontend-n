@@ -33,11 +33,10 @@ export function TeacherGrades() {
   const [session, setSession] = useState<string>("Session Normale")
 
   const { data, loading } = usePageData((d) => {
-    const teacherId = user?.refId
-    const teacher = d.teachers.find((t) => t.id === teacherId) || d.teachers[0]
+    const teacher = d.teachers.find((t) => t.user_id === user?.id) || d.teachers[0]
     if (!teacher) return { teacher: null, courses: [], students: [], grades: [] }
 
-    const courses = d.courses.filter((c) => c.teacherId === teacher.id)
+    const courses = d.courses.filter((c) => c.teacher_id === teacher.id)
     return { teacher, courses, students: d.students, grades: d.grades }
   })
 
@@ -53,7 +52,7 @@ export function TeacherGrades() {
   // 2. Filtre les étudiants de la promotion du cours sélectionné
   const studentsInPromotion = useMemo(() => {
     if (!currentCourse || !data?.students) return []
-    return data.students.filter(s => s.promotionId === currentCourse.promotionId)
+    return data.students.filter(s => s.promotion_id === currentCourse.promotion_id)
   }, [currentCourse, data?.students])
 
   // 3. Associe les notes existantes aux étudiants pour le contexte actuel (Course + Title + Type)
@@ -62,8 +61,8 @@ export function TeacherGrades() {
 
     return studentsInPromotion.map(student => {
       const grade = data.grades.find(g =>
-        g.studentId === student.id &&
-        g.courseId === selectedCourseId &&
+        g.student_id === student.id &&
+        g.course_id === selectedCourseId &&
         g.type === assessmentType &&
         g.assessmentTitle === assessmentTitle
       )
@@ -74,7 +73,7 @@ export function TeacherGrades() {
   const alreadyGraded = gradedContext.filter(s => !!s.grade)
   const toBeGraded = gradedContext.filter(s => !s.grade)
 
-  const handleScoreChange = (studentId: string, scoreStr: string) => {
+  const handleScoreChange = async (student_id: string, scoreStr: string) => {
     if (!selectedCourseId || !assessmentTitle) {
       toast.error("Veuillez sélectionner un cours et donner un titre à l'évaluation")
       return
@@ -84,10 +83,10 @@ export function TeacherGrades() {
     if (isNaN(score) || score < 0 || score > 20) return
 
     try {
-      upsertGrade({
-        studentId,
-        courseId: selectedCourseId,
-        promotionId: currentCourse!.promotionId,
+      await upsertGrade({
+        student_id,
+        course_id: selectedCourseId,
+        promotion_id: currentCourse!.promotion_id,
         score,
         session,
         type: assessmentType,
@@ -105,7 +104,7 @@ export function TeacherGrades() {
       header: "Étudiant",
       render: (s) => (
         <div>
-          <p className="font-medium">{s.firstName} {s.familyName} {s.lastName}</p>
+          <p className="font-medium">{s.user?.first_name || s.first_name} {s.user?.last_name || s.last_name}</p>
           <p className="font-mono text-[10px] text-muted-foreground">{s.matricule}</p>
         </div>
       )
@@ -136,7 +135,7 @@ export function TeacherGrades() {
       header: "Étudiant",
       render: (s) => (
         <div>
-          <p className="font-medium">{s.firstName} {s.familyName} {s.lastName}</p>
+          <p className="font-medium">{s.user?.first_name || s.first_name} {s.user?.last_name || s.last_name}</p>
           <p className="font-mono text-[10px] text-muted-foreground">{s.matricule}</p>
         </div>
       )
@@ -242,12 +241,10 @@ export function TeacherGrades() {
           {/* Section: À coter */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-[10px] font-bold text-orange-600">
-                  {toBeGraded.length}
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">À coter</h3>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-[10px] font-bold text-orange-600">
+                {toBeGraded.length}
               </div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">À coter</h3>
             </div>
             <DataTable
               columns={columnsToBeGraded}
@@ -261,12 +258,10 @@ export function TeacherGrades() {
           {/* Section: Déjà cotés */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-[10px] font-bold text-green-600">
-                  {alreadyGraded.length}
-                </div>
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Déjà cotés</h3>
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-[10px] font-bold text-green-600">
+                {alreadyGraded.length}
               </div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Déjà cotés</h3>
               <Badge variant="outline" className="text-[10px]">Modifiable</Badge>
             </div>
             <DataTable

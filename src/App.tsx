@@ -3,11 +3,12 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { AppLayout } from "@/layouts/AppLayout"
 import { LoginPage } from "@/pages/LoginPage"
+import { OnboardingPage } from "@/pages/OnboardingPage"
 import { NotificationsPage } from "@/pages/NotificationsPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 import type { ReactNode } from "react"
-import type { Role } from "@/types"
-import locales from "@/lib/locales.json"
+import type { RoleName } from "@/types"
+import { i18n } from "@/lib/i18n"
 
 // ─── Étudiant ──────────────────────────────────────────────────────────────
 import { StudentDashboard }   from "@/pages/student/StudentDashboard"
@@ -40,6 +41,8 @@ import { SecretariatGeneralDashboard }     from "@/pages/secretariat_general/Sec
 import { SecretariatGeneralEntities }      from "@/pages/secretariat_general/SecretariatGeneralEntities"
 import { SecretariatGeneralTeachers }      from "@/pages/secretariat_general/SecretariatGeneralTeachers"
 import { SecretariatGeneralStudents }      from "@/pages/secretariat_general/SecretariatGeneralStudents"
+import { SecretariatGeneralResults }       from "@/pages/secretariat_general/SecretariatGeneralResults"
+import { SecretariatGeneralRecours }       from "@/pages/secretariat_general/SecretariatGeneralRecours"
 import { SecretariatGeneralAcademic }      from "@/pages/secretariat_general/SecretariatGeneralAcademic"
 
 // ─── Rectorat ─────────────────────────────────────────────────────────────────
@@ -55,7 +58,7 @@ function AuthSpinner() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-3">
         <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{locales.common.verification}</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{i18n.common.verification}</p>
       </div>
     </div>
   )
@@ -73,20 +76,20 @@ function RequireAuth({ children }: { children: ReactNode }) {
  * Role-based access guard — renders <Outlet /> for the expected role,
  * redirects elsewhere for any other authenticated user.
  */
-function RoleGuard({ allow }: { allow: Role }) {
-  const { user, isLoading } = useAuth()
+function RoleGuard({ allow }: { allow: RoleName }) {
+  const { roleName, isLoading } = useAuth()
   if (isLoading) return <AuthSpinner />
-  if (!user) return <Navigate to="/login" replace />
-  if (user.role !== allow) return <Navigate to={`/${user.role}/dashboard`} replace />
+  if (!roleName) return <Navigate to="/login" replace />
+  if (roleName !== allow) return <Navigate to={`/${roleName}/dashboard`} replace />
   return <Outlet />
 }
 
 /** Redirects to the correct portal dashboard after login. */
 function RoleRedirect() {
-  const { role, isAuthenticated, isLoading } = useAuth()
+  const { roleName, isAuthenticated, isLoading } = useAuth()
   if (isLoading) return <AuthSpinner />
-  if (!isAuthenticated || !role) return <Navigate to="/login" replace />
-  return <Navigate to={`/${role}/dashboard`} replace />
+  if (!isAuthenticated || !roleName) return <Navigate to="/login" replace />
+  return <Navigate to={`/${roleName}/dashboard`} replace />
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────
@@ -94,8 +97,9 @@ function RoleRedirect() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/"      element={<OnboardingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/"      element={<RoleRedirect />} />
+      <Route path="/home"  element={<RoleRedirect />} />
 
       {/* All protected routes share the AppLayout shell */}
       <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
@@ -145,6 +149,8 @@ export default function App() {
           <Route path="/secretariat_general/entities"      element={<SecretariatGeneralEntities />} />
           <Route path="/secretariat_general/students"      element={<SecretariatGeneralStudents />} />
           <Route path="/secretariat_general/teachers"      element={<SecretariatGeneralTeachers />} />
+          <Route path="/secretariat_general/results"       element={<SecretariatGeneralResults />} />
+          <Route path="/secretariat_general/recours"       element={<SecretariatGeneralRecours />} />
           <Route path="/secretariat_general/academic"      element={<SecretariatGeneralAcademic />} />
           <Route path="/secretariat_general/notifications" element={<Navigate to="/communications" replace />} />
           <Route path="/secretariat_general/announcements" element={<Navigate to="/communications" replace />} />
@@ -155,6 +161,8 @@ export default function App() {
           <Route path="/rectorat/dashboard" element={<RectoratDashboard />} />
           <Route path="/rectorat/stats"     element={<RectoratStats />} />
           <Route path="/rectorat/faculties" element={<RectoratFaculties />} />
+          <Route path="/rectorat/results"   element={<SecretariatGeneralResults />} />
+          <Route path="/rectorat/recours"   element={<SecretariatGeneralRecours />} />
           <Route path="/rectorat/academic"  element={<SecretariatGeneralAcademic />} />
         </Route>
 

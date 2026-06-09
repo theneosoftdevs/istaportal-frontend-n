@@ -1,87 +1,87 @@
-const CACHE_NAME = 'ista-portal-v4';
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/ista.jpeg'
-];
+// Service Worker — ISTA PORTAL PWA
+// Stratégie : Network-first pour API, Cache-first pour assets statiques
+const CACHE_VERSION = 'ista-v5'
+const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/ista.jpeg']
 
-// Cache static assets during installation
+// ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  self.skipWaiting()
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
-});
+    caches.open(CACHE_VERSION).then((cache) => cache.addAll(STATIC_ASSETS))
+  )
+})
 
-// Clean up old caches
+// ── Activate : purge old caches ───────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName.startsWith('ista-portal-') && cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k.startsWith('ista-') && k !== CACHE_VERSION)
+            .map((k) => caches.delete(k))
+        )
+      )
+      .then(() => self.clients.claim())
+  )
+})
 
+// ── Fetch ─────────────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const { request } = event
+  const url = new URL(request.url)
 
-  if (request.method !== 'GET') return;
+  // Skip non-GET and cross-origin (API) requests
+  if (request.method !== 'GET') return
+  if (!url.origin.startsWith(self.location.origin)) return
 
-  // 1. Network-First for Manifest and Index (HTML)
-  if (url.pathname === '/manifest.json' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // API calls — always network, never cache
+  if (url.pathname.startsWith('/api/')) return
+
+  // HTML navigation — network-first, fallback to cached /
+  if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const clonedResponse = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clonedResponse));
-          return response;
+        .then((res) => {
+          const clone = res.clone()
+          caches.open(CACHE_VERSION).then((c) => c.put(request, clone))
+          return res
         })
-        .catch(() => caches.match(request))
-    );
-    return;
+        .catch(() => caches.match('/') ?? caches.match('/index.html'))
+    )
+    return
   }
 
-  // 2. Stale-While-Revalidate for JS, CSS, and Images
-  const isStaticAsset =
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.jpg') ||
-    url.pathname.endsWith('.jpeg') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.includes('/assets/');
+  // Static assets (JS, CSS, images, fonts) — stale-while-revalidate
+  const isAsset =
+    url.pathname.includes('/assets/') ||
+    /\.(js|css|png|jpg|jpeg|svg|webp|woff2?|ttf|ico)$/.test(url.pathname)
 
-  if (isStaticAsset) {
+  if (isAsset) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse.clone()));
-          return networkResponse;
-        });
-        return cachedResponse || fetchPromise;
+      caches.match(request).then((cached) => {
+        const fresh = fetch(request).then((res) => {
+          const clone = res.clone()
+          caches.open(CACHE_VERSION).then((c) => c.put(request, clone))
+          return res
+        })
+        return cached ?? fresh
       })
-    );
-    return;
+    )
+    return
   }
 
-  // 3. Cache-First for everything else (fallback)
+  // Default — network with cache fallback
   event.respondWith(
-    caches.match(request).then((response) => {
-      return response || fetch(request).catch(() => {
-        if (request.mode === 'navigate') {
-          return caches.match('/');
+    fetch(request)
+      .then((res) => {
+        if (res.ok) {
+          const clone = res.clone()
+          caches.open(CACHE_VERSION).then((c) => c.put(request, clone))
         }
-      });
-    })
-  );
-});
+        return res
+      })
+      .catch(() => caches.match(request))
+  )
+})

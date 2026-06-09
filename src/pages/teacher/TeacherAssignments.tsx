@@ -26,11 +26,12 @@ import {
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
 import { useCurrentTeacher } from "@/hooks/useCurrentUser"
+import { toast } from "sonner"
 import {
   addAssignment,
   removeAssignment,
   gradeSubmission,
-  nextAssignmentId,
+  generateId,
 } from "@/lib/store"
 
 export function TeacherAssignments() {
@@ -57,31 +58,53 @@ export function TeacherAssignments() {
     durationMinutes: 0,
   })
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!form.courseId || !form.title.trim() || !form.dueDate) return
-    addAssignment({
-      id:          nextAssignmentId(),
-      courseId:    form.courseId,
-      teacherId:   teacher.id,
-      title:       form.title.trim(),
-      description: form.description.trim(),
-      dueDate:     form.dueDate,
-      createdAt:   new Date().toISOString().slice(0, 10),
-      type:        form.type,
-      deadlineTime: form.deadlineTime,
-      durationMinutes: form.durationMinutes > 0 ? form.durationMinutes : undefined,
-    })
-    setForm({ courseId: "", title: "", description: "", dueDate: "", type: "PDF", deadlineTime: "23:59", durationMinutes: 0 })
-    setCreateOpen(false)
+    try {
+      await addAssignment({
+        id:          generateId(),
+        courseId:    form.courseId,
+        teacherId:   teacher.id,
+        title:       form.title.trim(),
+        description: form.description.trim(),
+        dueDate:     form.dueDate,
+        createdAt:   new Date().toISOString().slice(0, 10),
+        type:        form.type,
+        deadlineTime: form.deadlineTime,
+        durationMinutes: form.durationMinutes > 0 ? form.durationMinutes : undefined,
+      })
+      toast.success("Travail créé avec succès")
+      setForm({ courseId: "", title: "", description: "", dueDate: "", type: "PDF", deadlineTime: "23:59", durationMinutes: 0 })
+      setCreateOpen(false)
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la création")
+    }
   }
 
-  function handleGrade(subId: string) {
+  async function handleGrade(subId: string) {
     const score = Number(gradeValue)
     if (isNaN(score) || score < 0 || score > 20) return
-    gradeSubmission(subId, score, feedback.trim())
-    setGradeOpen(null)
-    setGradeValue("")
-    setFeedback("")
+    try {
+      await gradeSubmission(subId, score, feedback.trim())
+      toast.success("Note enregistrée")
+      setGradeOpen(null)
+      setGradeValue("")
+      setFeedback("")
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'enregistrement")
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await removeAssignment(id)
+      toast.success("Travail supprimé")
+      window.location.reload()
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de la suppression")
+    }
   }
 
   function closeGradeDialog() {
@@ -159,7 +182,7 @@ export function TeacherAssignments() {
                           variant="ghost"
                           size="icon"
                           className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => removeAssignment(a.id)}
+                          onClick={() => handleDelete(a.id)}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -194,7 +217,7 @@ export function TeacherAssignments() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <CardTitle className="text-sm font-semibold text-foreground">
-                          {student ? `${student.firstName} ${student.familyName} ${student.lastName}` : s.studentId}
+                          {student ? `${student.first_name} ${student.family_name} ${student.last_name}` : s.studentId}
                         </CardTitle>
                         <CardDescription>
                           {assignment?.title ?? "Travail"} · Remis le{" "}

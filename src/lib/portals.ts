@@ -21,7 +21,7 @@ import {
   BookMarked,
   type LucideIcon,
 } from "lucide-react"
-import type { Role, PortalInfo } from "@/types"
+import type { RoleName, PortalInfo } from "@/types"
 
 export const PORTALS: (PortalInfo & { icon: LucideIcon; color: string })[] = [
   {
@@ -53,6 +53,13 @@ export const PORTALS: (PortalInfo & { icon: LucideIcon; color: string })[] = [
     color: "text-chart-4",
   },
   {
+    role: "section",
+    label: "Section / Pédagogie",
+    description: "Gestion pédagogique des cours.",
+    icon: DoorOpen,
+    color: "text-chart-6",
+  },
+  {
     role: "secretariat_general",
     label: "Secrétariat Général",
     description: "Coordination et résultats.",
@@ -68,7 +75,7 @@ export const PORTALS: (PortalInfo & { icon: LucideIcon; color: string })[] = [
   },
 ]
 
-export function getPortal(role: Role) {
+export function getPortal(role: RoleName) {
   return PORTALS.find((p) => p.role === role)
 }
 
@@ -78,7 +85,7 @@ export interface NavItem {
   icon: LucideIcon
 }
 
-export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
+export const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   student: [
     { label: "Accueil",      to: "/student/dashboard",    icon: Home },
     { label: "Horaire",      to: "/student/schedule",     icon: CalendarDays },
@@ -99,6 +106,10 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Étudiants",    to: "/apparitorat/students",     icon: Users },
     { label: "Locaux",       to: "/apparitorat/rooms",        icon: DoorOpen },
   ],
+  section: [
+    { label: "Accueil",      to: "/secretariat_faculte/dashboard",  icon: Home },
+    { label: "Cours",        to: "/secretariat_faculte/courses",    icon: BookOpen },
+  ],
   secretariat_faculte: [
     { label: "Accueil",      to: "/secretariat_faculte/dashboard",  icon: Home },
     { label: "Promotions",   to: "/secretariat_faculte/promotions", icon: Users },
@@ -110,12 +121,16 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Entités",      to: "/secretariat_general/entities",  icon: Building2 },
     { label: "Étudiants",    to: "/secretariat_general/students",  icon: Users },
     { label: "Enseignants",  to: "/secretariat_general/teachers",  icon: UserSquare2 },
+    { label: "Résultats",    to: "/secretariat_general/results",   icon: FileText },
+    { label: "Recours",      to: "/secretariat_general/recours",   icon: AlertCircle },
     { label: "Académique",   to: "/secretariat_general/academic",  icon: BarChart3 },
   ],
   rectorat: [
     { label: "Accueil",      to: "/rectorat/dashboard", icon: Home },
     { label: "Stats",        to: "/rectorat/stats",     icon: BarChart3 },
     { label: "Facultés",     to: "/rectorat/faculties", icon: Building2 },
+    { label: "Résultats",    to: "/rectorat/results",   icon: FileText },
+    { label: "Recours",      to: "/rectorat/recours",   icon: AlertCircle },
     { label: "Académique",   to: "/rectorat/academic",  icon: BookMarked },
   ],
 }

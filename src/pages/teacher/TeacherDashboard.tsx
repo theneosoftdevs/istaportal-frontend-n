@@ -3,12 +3,12 @@ import { Users, FileClock, BookOpen, CalendarDays } from "lucide-react"
 import { KPICard } from "@/components/ui/KPICard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Loader } from "@/components/ui/Loader"
-import { ScheduleGrid } from "@/components/ScheduleGrid"
-import { DashboardLayout } from "@/components/DashboardLayout"
+import { ScheduleGrid } from "@/components/ui/ScheduleGrid"
+import { DashboardLayout } from "@/components/ui/DashboardLayout"
 import { usePageData } from "@/hooks/usePageData"
 import { useAuth } from "@/contexts/AuthContext"
 import { WEEK_DAYS_FULL } from "@/lib/constants"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 import { getTeacherDashboardData } from "@/lib/selectors"
 
 export function TeacherDashboard() {
@@ -16,7 +16,7 @@ export function TeacherDashboard() {
   const todayName = WEEK_DAYS_FULL[new Date().getDay()]
 
   const { data, loading } = usePageData((d) =>
-    getTeacherDashboardData(d, user?.refId ?? d.teachers[0]?.id, todayName)
+    getTeacherDashboardData(d, user?.id, todayName)
   )
 
   if (loading || !data) return <Loader fullHeight />
@@ -26,35 +26,35 @@ export function TeacherDashboard() {
 
   return (
     <DashboardLayout
-      title={`${locales.common.greeting}, ${teacher.title} ${teacher.familyName}`}
-      subtitle={`${teacher.matricule} · ${courses.length} ${locales.teacher.active_courses.toLowerCase()}`}
+      title={`${i18n.common.greeting}, ${teacher.title} ${teacher.user?.last_name || ""}`}
+      subtitle={`${teacher.matricule} · ${courses.length} ${i18n.teacher.active_courses.toLowerCase()}`}
       stats={
         <>
           <KPICard
-            title={locales.teacher.total_students}
+            title={i18n.teacher.total_students}
             value={students.length}
-            subtitle={locales.teacher.all_promotions}
+            subtitle={i18n.teacher.all_promotions}
             icon={Users}
             colorClass="bg-chart-1/10 text-chart-1"
           />
           <KPICard
-            title={locales.teacher.pending_grades}
+            title={i18n.teacher.pending_grades}
             value={pendingGrades.length}
-            subtitle={locales.teacher.to_validate}
+            subtitle={i18n.teacher.to_validate}
             icon={FileClock}
             colorClass="bg-chart-3/15 text-chart-3"
           />
           <KPICard
-            title={locales.teacher.taught_courses}
+            title={i18n.teacher.taught_courses}
             value={courses.length}
-            subtitle={locales.student.current_semester}
+            subtitle={i18n.student.current_semester}
             icon={BookOpen}
             colorClass="bg-chart-2/10 text-chart-2"
           />
           <KPICard
-            title={locales.teacher.weekly_sessions}
+            title={i18n.teacher.weekly_sessions}
             value={schedules.length}
-            subtitle={locales.teacher.today_schedule}
+            subtitle={i18n.teacher.today_schedule}
             icon={CalendarDays}
             colorClass="bg-chart-4/10 text-chart-4"
           />
@@ -63,11 +63,11 @@ export function TeacherDashboard() {
     >
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>{locales.teacher.today_schedule}</CardTitle>
+          <CardTitle>{i18n.teacher.today_schedule}</CardTitle>
           <CardDescription>
             {hasToday
-              ? `${locales.student.schedule} ${todayName.toLowerCase()}`
-              : `${locales.student.no_classes} (${todayName.toLowerCase()}) — ${locales.teacher.schedule_overview}`}
+              ? `${i18n.student.schedule} ${todayName.toLowerCase()}`
+              : `${i18n.student.no_classes} (${todayName.toLowerCase()}) — ${i18n.teacher.schedule_overview}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,8 +81,8 @@ export function TeacherDashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{locales.teacher.my_courses}</CardTitle>
-          <CardDescription>{locales.teacher.courses_charge}</CardDescription>
+          <CardTitle>{i18n.teacher.my_courses}</CardTitle>
+          <CardDescription>{i18n.teacher.courses_charge}</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="divide-y divide-border">
@@ -96,7 +96,7 @@ export function TeacherDashboard() {
                   <p className="font-mono text-xs text-muted-foreground">{c.code}</p>
                 </div>
                 <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
-                  {c.credits} {locales.teacher.credits}
+                  {c.credits} {i18n.teacher.credits}
                 </span>
               </li>
             ))}

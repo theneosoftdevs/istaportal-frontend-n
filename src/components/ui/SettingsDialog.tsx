@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { useAuth } from "@/contexts/AuthContext"
 import { toast } from "sonner"
 import { Loader2, Eye, EyeOff } from "lucide-react"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 interface SettingsDialogProps {
   open: boolean
@@ -36,7 +36,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setTimeout(() => {
       setIsLoading(false)
       onOpenChange(false)
-      toast.success(locales.common.success_update)
+      toast.success(i18n.common.success_update)
     }, 1000)
   }
 
@@ -44,14 +44,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{locales.settings.profile_settings}</DialogTitle>
+          <DialogTitle>{i18n.settings.profile_settings}</DialogTitle>
           <DialogDescription>
-            {locales.settings.profile_desc}
+            {i18n.settings.profile_desc}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSave} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="settings-email">{locales.settings.email_label}</Label>
+            <Label htmlFor="settings-email">{i18n.settings.email_label}</Label>
             <Input
               id="settings-email"
               type="email"
@@ -61,7 +61,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="settings-phone">{locales.settings.phone_label}</Label>
+            <Label htmlFor="settings-phone">{i18n.settings.phone_label}</Label>
             <Input
               id="settings-phone"
               type="tel"
@@ -71,14 +71,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="settings-password">{locales.settings.new_password_label}</Label>
+            <Label htmlFor="settings-password">{i18n.settings.new_password_label}</Label>
             <div className="relative">
               <Input
                 id="settings-password"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={locales.settings.password_placeholder}
+                placeholder={i18n.settings.password_placeholder}
                 className="pr-10"
               />
               <Button
@@ -87,7 +87,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 size="icon"
                 className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-foreground"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? locales.common.hide_password : locales.common.show_password}
+                aria-label={showPassword ? i18n.common.hide_password : i18n.common.show_password}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </Button>
@@ -96,7 +96,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-              {locales.settings.save_changes}
+              {i18n.settings.save_changes}
             </Button>
           </DialogFooter>
         </form>

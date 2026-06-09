@@ -11,7 +11,7 @@ interface FacultyRow {
   id: string
   name: string
   code: string
-  dean: string
+  secretaryName: string
   studentCount: number
   activeCount: number
   teacherCount: number
@@ -25,7 +25,7 @@ export function RectoratFaculties() {
       id: f.id,
       name: f.name,
       code: f.code,
-      dean: f.dean,
+      secretaryName: f.secretary ? `${f.secretary.first_name} ${f.secretary.last_name}` : "—",
       studentCount: d.students.filter((s) => s.facultyId === f.id).length,
       activeCount: d.students.filter((s) => s.facultyId === f.id && s.status === "active").length,
       teacherCount: d.teachers.filter((t) => t.facultyId === f.id).length,
@@ -53,9 +53,9 @@ export function RectoratFaculties() {
       ),
     },
     {
-      key: "dean",
-      header: "Doyen",
-      render: (f) => <span className="text-muted-foreground">{f.dean}</span>,
+      key: "secretary",
+      header: "Secrétaire de Faculté",
+      render: (f) => <span className="text-muted-foreground">{f.secretaryName}</span>,
     },
     {
       key: "students",

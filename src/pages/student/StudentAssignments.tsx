@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { useStore } from "@/hooks/usePageData"
 import { useCurrentStudent } from "@/hooks/useCurrentUser"
-import { addSubmission, nextSubmissionId } from "@/lib/store"
+import { addSubmission, generateId } from "@/lib/store"
 import { toast } from "sonner"
 
 export function StudentAssignments() {
@@ -55,10 +55,9 @@ export function StudentAssignments() {
     // Simulate upload
     setTimeout(() => {
       addSubmission({
-        id:           nextSubmissionId(),
         assignmentId: submitTarget.id,
         studentId:    student.id,
-        content:      content.trim(),
+        content,
         submittedAt:  new Date().toISOString(),
       })
       setIsUploading(false)

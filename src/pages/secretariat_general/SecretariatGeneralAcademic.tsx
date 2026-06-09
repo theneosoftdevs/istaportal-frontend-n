@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/ui/PageHeader"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SecretariatGeneralResults } from "./SecretariatGeneralResults"
 import { SecretariatGeneralRecours } from "./SecretariatGeneralRecours"
-import locales from "@/lib/locales.json"
+import { i18n } from "@/lib/i18n"
 
 export function SecretariatGeneralAcademic() {
   const [activeTab, setActiveTab] = useState("results")
@@ -21,11 +21,11 @@ export function SecretariatGeneralAcademic() {
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="results" className="gap-2">
             <BarChart3 className="size-4" />
-            {locales.secretariat_general.results_title}
+            {i18n.secretariat_general.results_title}
           </TabsTrigger>
           <TabsTrigger value="appeals" className="gap-2">
             <AlertCircle className="size-4" />
-            {locales.secretariat_general.appeals_title}
+            {i18n.secretariat_general.appeals_title}
           </TabsTrigger>
         </TabsList>
         <div className="mt-6">

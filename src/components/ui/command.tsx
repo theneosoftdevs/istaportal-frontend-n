@@ -5,7 +5,7 @@ import { Command as CommandPrimitive } from 'cmdk'
 import { SearchIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import locales from '@/lib/locales.json'
+import { i18n } from "@/lib/i18n"
 import {
   Dialog,
   DialogContent,
@@ -31,8 +31,8 @@ function Command({
 }
 
 function CommandDialog({
-  title = locales.common.command_palette,
-  description = locales.common.search_command,
+  title = i18n.common.command_palette,
+  description = i18n.common.search_command,
   children,
   className,
   showCloseButton = true,

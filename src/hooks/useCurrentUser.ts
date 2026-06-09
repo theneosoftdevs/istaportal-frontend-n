@@ -9,16 +9,25 @@ import type { AppData, Student, Teacher } from "@/types"
  * Falls back to the first student in the store so demo mode always works,
  * but with RoleGuard in place an unauthenticated/wrong-role call is unreachable.
  */
-export function useCurrentStudent(store: AppData): Student {
+export function useCurrentStudent(store: AppData): Student | null {
   const { user } = useAuth()
-  return store.students.find((s) => s.id === user?.refId) ?? store.students[0]
+  if (!user) return null
+  return (
+    store.students.find((s) => s.user_id === user.id) ||
+    store.students[0] ||
+    null
+  )
 }
 
 /**
  * Returns the Teacher record linked to the currently authenticated user.
- * Falls back to the first teacher for demo purposes.
  */
-export function useCurrentTeacher(store: AppData): Teacher {
+export function useCurrentTeacher(store: AppData): Teacher | null {
   const { user } = useAuth()
-  return store.teachers.find((t) => t.id === user?.refId) ?? store.teachers[0]
+  if (!user) return null
+  return (
+    store.teachers.find((t) => t.user_id === user.id) ||
+    store.teachers[0] ||
+    null
+  )
 }
