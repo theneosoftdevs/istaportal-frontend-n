@@ -10,7 +10,7 @@ export function useNavigation() {
       const width = window.innerWidth
       if (width < 768) {
         setMode("mobile")
-      } else if (width < 1024) {
+      } else if (width <= 1024) {
         setMode("tablet")
       } else {
         setMode("desktop")

@@ -48,10 +48,10 @@ export function SecretariatGeneralResults() {
   const succeeding = withGrades.filter((s) => s.average >= 10).length
 
   const rows: StudentRow[] = store.students.map((s) => {
-    const promotion = store.promotions.find((p) => p.id === s.promotionId)
-    const faculty = store.faculties.find((f) => f.id === s.facultyId)
+    const promotion = store.promotions.find((p) => p.id === s.promotion_id)
+    const faculty = store.faculties.find((f) => f.id === s.faculty_id)
     const gradeCount = store.grades.filter(
-      (g) => g.studentId === s.id && g.status === "validated",
+      (g) => g.student_id === s.id && g.status === "validated",
     ).length
     return {
       ...s,
@@ -65,11 +65,11 @@ export function SecretariatGeneralResults() {
   const filteredPromotions =
     facultyFilter === "all"
       ? store.promotions
-      : store.promotions.filter((p) => p.facultyId === facultyFilter)
+      : store.promotions.filter((p) => p.faculty_id === facultyFilter)
 
   const filtered = rows
-    .filter((r) => facultyFilter === "all" || r.facultyId === facultyFilter)
-    .filter((r) => promotionFilter === "all" || r.promotionId === promotionFilter)
+    .filter((r) => facultyFilter === "all" || r.faculty_id === facultyFilter)
+    .filter((r) => promotionFilter === "all" || r.promotion_id === promotionFilter)
 
   const columns: Column<StudentRow>[] = [
     {
@@ -78,7 +78,7 @@ export function SecretariatGeneralResults() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.first_name} {s.family_name} {s.last_name}
+            {s.first_name} {s.middle_name} {s.last_name}
           </p>
           <p className="font-mono text-xs text-muted-foreground">{s.matricule}</p>
         </div>

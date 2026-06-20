@@ -46,11 +46,11 @@ export function StudentGrades() {
   }
 
   const grades: GradeRow[] = store.grades
-    .filter((g) => g.studentId === student.id)
+    .filter((g) => g.student_id === student.id)
     .map((g) => {
-      const course  = store.courses.find((c) => c.id === g.courseId)
+      const course  = store.courses.find((c) => c.id === g.course_id)
       const appeal  = store.gradeAppeals.find(
-        (a) => a.gradeId === g.id && a.studentId === student.id,
+        (a) => a.grade_id === g.id && a.student_id === student.id,
       )
       return {
         ...g,
@@ -58,7 +58,7 @@ export function StudentGrades() {
         courseCode:   course?.code     ?? "—",
         credits:      course?.credits  ?? 0,
         appealStatus: appeal?.status   ?? null,
-        appealMessage: appeal?.statusMessage,
+        appealMessage: appeal?.status_message,
       }
     })
 
@@ -67,7 +67,7 @@ export function StudentGrades() {
 
   const [appealGrade, setAppealGrade] = useState<GradeRow | null>(null)
   const [reason, setReason] = useState("")
-  const [estimatedGrade, setEstimatedGrade] = useState("")
+  const [estimated_grade, setEstimatedGrade] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleAppeal() {
@@ -78,14 +78,14 @@ export function StudentGrades() {
     setTimeout(() => {
       addGradeAppeal({
         id:        generateId(),
-        studentId: student.id,
-        courseId:  appealGrade.courseId,
-        gradeId:   appealGrade.id,
+        student_id: student.id,
+        course_id:  appealGrade.course_id,
+        grade_id:   appealGrade.id,
         reason:    reason.trim(),
         status:    "pending",
-        createdAt: new Date().toISOString(),
-        estimatedGrade: Number(estimatedGrade) || 0,
-        proofUrl: "https://example.com/proof.jpg"
+        created_at: new Date().toISOString(),
+        estimated_grade: Number(estimated_grade) || 0,
+        proof_url: "https://example.com/proof.jpg"
       })
       setIsSubmitting(false)
       setAppealGrade(null)
@@ -208,7 +208,7 @@ export function StudentGrades() {
                 min="0"
                 max="20"
                 placeholder="Ex: 15"
-                value={estimatedGrade}
+                value={estimated_grade}
                 onChange={(e) => setEstimatedGrade(e.target.value)}
               />
             </div>

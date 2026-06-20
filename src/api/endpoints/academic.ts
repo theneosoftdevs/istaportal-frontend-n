@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   assignments: { base: "/assignments", detail: (id: string) => `/assignments/${id}` },
   submissions: { base: "/submissions", grade: (id: string) => `/submissions/${id}/grade` },
   resources: { base: "/resources", detail: (id: string) => `/resources/${id}` },
+  averages: { student: (id: string) => `/academics/averages/students/${id}` },
 }
 
 export interface FacultyPayload {
@@ -33,8 +34,8 @@ export interface PromotionPayload {
 }
 
 export const promotionApi = {
-  list:   (facultyId?: string) => {
-    const qs = facultyId ? `?facultyId=${facultyId}` : ""
+  list:   (faculty_id?: string) => {
+    const qs = faculty_id ? `?faculty_id=${faculty_id}` : ""
     return api.get<Promotion[]>(`${ENDPOINTS.promotions.base}${qs}`)
   },
   get:    (id: string)         => api.get<Promotion>(ENDPOINTS.promotions.detail(id)),
@@ -52,8 +53,8 @@ export const courseApi = {
   create: (body: unknown)      => api.post<Course>(ENDPOINTS.courses.base, body),
   update: (id: string, b: unknown) => api.put<Course>(ENDPOINTS.courses.detail(id), b),
   delete: (id: string)         => api.delete<void>(ENDPOINTS.courses.detail(id)),
-  assignTeacher: (courseId: string, teacherId: string) =>
-    api.patch<Course>(ENDPOINTS.courses.teacher(courseId), { teacherId }),
+  assignTeacher: (course_id: string, teacher_id: string) =>
+    api.patch<Course>(ENDPOINTS.courses.teacher(course_id), { teacher_id }),
 }
 
 export const scheduleApi = {
@@ -80,6 +81,10 @@ export const gradeApi = {
   upsert: (body: unknown)       => api.post<Grade>(ENDPOINTS.grades.base, body),
   updateStatus: (id: string, status: string) =>
     api.patch<Grade>(ENDPOINTS.grades.status(id), { status }),
+  getStudentAverage: (student_id: string, history_id?: string) => {
+    const qs = history_id ? `?history_id=${history_id}` : ""
+    return api.get<any>(`${ENDPOINTS.averages.student(student_id)}${qs}`)
+  }
 }
 
 export const appealApi = {

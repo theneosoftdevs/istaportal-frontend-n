@@ -1,6 +1,7 @@
 // src/api/client.ts
 // HTTP client for the ISTA-GOMA backend API.
 const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api"
+const TOKEN_KEY = "fino_token"
 
 export class ApiError extends Error {
   constructor(
@@ -26,7 +27,7 @@ async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  const token = localStorage.getItem("ista-token")
+  const token = localStorage.getItem(TOKEN_KEY)
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -41,6 +42,7 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
     signal,
   })

@@ -14,13 +14,13 @@ export function StudentResources() {
   const student = useCurrentStudent(store)
 
   const coursesWithResources = store.courses
-    .filter((c) => c.promotionId === student.promotionId)
+    .filter((c) => c.promotion_id === student.promotion_id)
     .map((c) => {
-      const teacher   = store.teachers.find((t) => t.id === c.teacherId)
-      const resources = store.courseResources.filter((r) => r.courseId === c.id)
+      const teacher   = store.teachers.find((t) => t.id === c.teacher_id)
+      const resources = store.courseResources.filter((r) => r.course_id === c.id)
       return {
         ...c,
-        teacherName: teacher ? `${teacher.first_name} ${teacher.family_name} ${teacher.last_name}` : "—",
+        teacherName: teacher ? `${teacher.first_name} ${teacher.middle_name} ${teacher.last_name}` : "—",
         resources,
       }
     })
@@ -91,7 +91,7 @@ export function StudentResources() {
                               {r.title}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {RESOURCE_LABELS[r.type]} · Ajouté le {r.createdAt}
+                              {RESOURCE_LABELS[r.type]} · Ajouté le {r.created_at}
                             </p>
                           </div>
                           <div className="flex shrink-0 gap-2">

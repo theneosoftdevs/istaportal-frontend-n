@@ -4,7 +4,7 @@ import {
   useSubmissions, useResources, useAnnouncements, useNotifications
 } from "./api"
 
-import type { AppData } from "@/types"
+import type { AppData, Promotion } from "@/types"
 
 /** 
  * Replaces the old local store. Now fetches data from the real backend APIs.
@@ -26,19 +26,16 @@ export function useStore(): AppData {
   const announcementsData = useAnnouncements().data || []
   const notificationsData = useNotifications().data || []
 
+  // Ensure promotions have a code if missing (for legacy or partial data)
+  const promotions: Promotion[] = promotionsData.map(p => ({
+    ...p,
+    code: p.code || p.name.substring(0, 3).toUpperCase(),
+    faculty_id: p.faculty_id || ""
+  }))
+
   return { 
     faculties: facultiesData, 
-    promotions: (promotionsData.length > 0) 
-      ? promotionsData.map((p) => ({
-          ...p,
-          facultyId: p.faculty_id || p.facultyId || p.faculty?.id || "",
-        }))
-      : facultiesData.filter(f => f.promotion || f.promotion_id).map(f => ({
-          id: f.promotion?.id || f.promotion_id || "",
-          name: f.promotion?.name || `Promotion ${f.code}`,
-          facultyId: f.id,
-          faculty: { id: f.id, name: f.name, code: f.code }
-        })),
+    promotions,
     students: studentsData, 
     teachers: teachersData, 
     courses: coursesData, 

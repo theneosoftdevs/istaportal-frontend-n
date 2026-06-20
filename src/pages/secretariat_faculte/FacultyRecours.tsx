@@ -28,19 +28,19 @@ export function FacultyRecours() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data, loading } = usePageData((d) => {
-    const facultyId = user?.facultyId || "f1"
-    const facultyCourses = d.courses.filter(c => c.facultyId === facultyId)
+    const faculty_id = user?.faculty_id || "f1"
+    const facultyCourses = d.courses.filter(c => c.faculty_id === faculty_id)
     const courseIds = new Set(facultyCourses.map(c => c.id))
 
     const recours: RecoursRow[] = d.gradeAppeals
-      .filter(a => courseIds.has(a.courseId))
+      .filter(a => courseIds.has(a.course_id))
       .map(a => {
-        const student = d.students.find(s => s.id === a.studentId)
-        const course = d.courses.find(c => c.id === a.courseId)
-        const grade = d.grades.find(g => g.id === a.gradeId)
+        const student = d.students.find(s => s.id === a.student_id)
+        const course = d.courses.find(c => c.id === a.course_id)
+        const grade = d.grades.find(g => g.id === a.grade_id)
         return {
           ...a,
-          studentName: student ? `${student.first_name} ${student.family_name} ${student.last_name}` : "—",
+          studentName: student ? `${student.first_name} ${student.middle_name} ${student.last_name}` : "—",
           courseName: course?.name ?? "—",
           originalScore: grade?.score ?? 0
         }
@@ -72,7 +72,7 @@ export function FacultyRecours() {
       )
     },
     { key: "reason", header: "Motif", render: r => <span className="truncate max-w-[200px] inline-block">{r.reason}</span> },
-    { key: "scores", header: "Notes (Act./Est.)", render: r => <span>{r.originalScore} → {r.estimatedGrade}</span> },
+    { key: "scores", header: "Notes (Act./Est.)", render: r => <span>{r.originalScore} → {r.estimated_grade}</span> },
     {
       key: "status",
       header: "Statut",
@@ -139,16 +139,16 @@ export function FacultyRecours() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Note estimée</p>
-                  <p className="font-medium text-primary">{selected.estimatedGrade}/20</p>
+                  <p className="font-medium text-primary">{selected.estimated_grade}/20</p>
                 </div>
               </div>
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Motif</p>
                 <p className="rounded-md bg-muted/50 p-3 text-sm italic">"{selected.reason}"</p>
               </div>
-              {selected.proofUrl && (
+              {selected.proof_url && (
                 <Button variant="link" className="h-auto p-0 text-xs" asChild>
-                  <a href={selected.proofUrl} target="_blank" rel="noreferrer">Voir la preuve jointe</a>
+                  <a href={selected.proof_url} target="_blank" rel="noreferrer">Voir la preuve jointe</a>
                 </Button>
               )}
 

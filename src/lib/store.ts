@@ -12,7 +12,7 @@ export async function upsertGrade(grade: any) { return await gradeApi.upsert(gra
 export async function addTeacher(teacher: any) { return await teacherApi.create(teacher) }
 export async function addFaculty(faculty: any) { return await facultyApi.create(faculty) }
 export async function addPromotion(promotion: any) { return await promotionApi.create(promotion) }
-export async function assignCourseToTeacher(courseId: string, teacherId: string) { return await courseApi.assignTeacher(courseId, teacherId) }
+export async function assignCourseToTeacher(course_id: string, teacher_id: string) { return await courseApi.assignTeacher(course_id, teacher_id) }
 export async function addAssignment(assignment: any) { return await assignmentApi.create(assignment) }
 export async function removeAssignment(id: string) { return await assignmentApi.delete(id) }
 export async function addSubmission(submission: any) { return await submissionApi.create(submission) }
@@ -28,7 +28,7 @@ export async function addScheduleSlot(slot: any) { return await scheduleApi.crea
 export async function removeScheduleSlot(id: string) { return await scheduleApi.delete(id) }
 export async function addAnnouncement(announcement: any) { return await announcementApi.create(announcement) }
 export async function markNotificationRead(id: string) { return await notificationApi.markRead(id) }
-export async function markAllNotificationsRead(role: any) { return await notificationApi.markAllRead() }
+export async function markAllNotificationsRead(role?: any) { return await notificationApi.markAllRead() }
 
 export function generateId() {
   return Math.random().toString(36).substring(2, 9)

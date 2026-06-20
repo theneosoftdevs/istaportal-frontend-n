@@ -33,8 +33,8 @@ export function SecretariatGeneralStudents() {
   const { data, loading } = usePageData((d) => {
     const students: StudentRow[] = d.students.map((s) => ({
       ...s,
-      facultyCode: d.faculties.find((f) => f.id === s.facultyId)?.code ?? "—",
-      promotionName: d.promotions.find((p) => p.id === s.promotionId)?.name ?? "—",
+      facultyCode: d.faculties.find((f) => f.id === s.faculty_id)?.code ?? "—",
+      promotionName: d.promotions.find((p) => p.id === s.promotion_id)?.name ?? "—",
     }))
     return { students, faculties: d.faculties, promotions: d.promotions }
   })
@@ -45,9 +45,9 @@ export function SecretariatGeneralStudents() {
     return data.students.filter((s) => {
       const matchQ =
         !q ||
-        [s.first_name, s.family_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
-      const matchF = faculty === "all" || s.facultyId === faculty
-      const matchP = promotion === "all" || s.promotionId === promotion
+        [s.first_name, s.middle_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
+      const matchF = faculty === "all" || s.faculty_id === faculty
+      const matchP = promotion === "all" || s.promotion_id === promotion
       const matchS = status === "all" || s.status === status
       return matchQ && matchF && matchP && matchS
     })
@@ -65,7 +65,7 @@ export function SecretariatGeneralStudents() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.first_name} {s.family_name} {s.last_name}
+            {s.first_name} {s.middle_name} {s.last_name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
@@ -138,7 +138,7 @@ export function SecretariatGeneralStudents() {
           <SelectContent>
             <SelectItem value="all">{i18n.apparitorat.all_promotions}</SelectItem>
             {data?.promotions
-              .filter(p => faculty === "all" || p.facultyId === faculty)
+              .filter(p => faculty === "all" || p.faculty_id === faculty)
               .map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.name}

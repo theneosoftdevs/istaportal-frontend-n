@@ -19,15 +19,15 @@ import { useAuth } from "@/contexts/AuthContext"
 
 export function FacultyDashboard() {
   const { user } = useAuth()
-  const [facultyId, setFacultyId] = useState(user?.facultyId || "")
+  const [faculty_id, setFacultyId] = useState(user?.faculty_id || "")
 
   const { data, loading } = usePageData((d) => {
-    const fallbackId = facultyId || d.faculties[0]?.id
+    const fallbackId = faculty_id || d.faculties[0]?.id
     return getFacultyDashboardData(d, fallbackId)
   })
 
-  // Update facultyId if it was empty and data loaded
-  if (!facultyId && data?.faculty?.id) {
+  // Update faculty_id if it was empty and data loaded
+  if (!faculty_id && data?.faculty?.id) {
     setFacultyId(data.faculty.id)
   }
 
@@ -49,7 +49,7 @@ export function FacultyDashboard() {
         title={i18n.secretariat_faculte.dashboard_title}
         subtitle={`${faculty.name} · Secrétaire de Faculté : ${faculty.secretary ? `${faculty.secretary.first_name} ${faculty.secretary.last_name}` : "—"}`}
         action={
-          <Select value={facultyId} onValueChange={setFacultyId}>
+          <Select value={faculty_id} onValueChange={setFacultyId}>
             <SelectTrigger className="w-56">
               <SelectValue placeholder={i18n.secretariat_faculte.faculty_select} />
             </SelectTrigger>
@@ -71,7 +71,7 @@ export function FacultyDashboard() {
         <KPICard title={i18n.secretariat_faculte.teachers} value={teachers.length} icon={UserSquare2} colorClass="bg-chart-3/15 text-chart-3" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{i18n.secretariat_faculte.promotions}</CardTitle>
@@ -86,7 +86,7 @@ export function FacultyDashboard() {
                     <p className="text-xs text-muted-foreground">{i18n.secretariat_faculte.level} {p.level}</p>
                   </div>
                   <span className="rounded-md bg-muted px-2 py-1 text-sm font-semibold text-foreground">
-                    {students.filter((s) => s.promotionId === p.id).length}
+                    {students.filter((s) => s.promotion_id === p.id).length}
                   </span>
                 </li>
               ))}
@@ -105,7 +105,7 @@ export function FacultyDashboard() {
                 <li key={t.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                   <div>
                     <p className="font-medium text-foreground">
-                      {t.first_name} {t.family_name} {t.last_name}
+                      {t.first_name} {t.middle_name || ""} {t.last_name}
                     </p>
                     <p className="text-xs text-muted-foreground">{t.title}</p>
                   </div>

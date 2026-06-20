@@ -1,6 +1,7 @@
 // src/pages/LoginPage.tsx
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import istaLogo from "@/assets/ista.jpeg"
 import { Moon, Sun, Mail, Lock, Loader2, Eye, EyeOff, ArrowLeft, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -120,9 +121,9 @@ export function LoginPage() {
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6">
         <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
           <img
-            src="/ista.jpeg"
+            src={istaLogo}
             alt="Logo ISTA"
-            className="size-8 shrink-0 rounded-lg object-cover ring-1 ring-border"
+            className="size-8 shrink-0 rounded-lg object-cover border border-border bg-white p-0.5 shadow-sm"
           />
           <div className="leading-none">
             <p className="text-[11px] font-black uppercase tracking-tighter text-foreground">

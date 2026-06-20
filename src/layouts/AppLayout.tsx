@@ -1,6 +1,7 @@
 // src/layouts/AppLayout.tsx
 import { Link, Outlet, useNavigate } from "react-router-dom"
 import { Moon, Sun, LogOut, User as UserIcon, Bell, Settings } from "lucide-react"
+import istaLogo from "@/assets/ista.jpeg"
 import {
   Button,
   Avatar,
@@ -31,7 +32,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const navMode = useNavigation()
 
-  const userName = user ? `${user.first_name} ${user.family_name} ${user.last_name || ""}`.trim() : ""
+  const userName = user ? `${user.first_name} ${user.middle_name || ""} ${user.last_name || ""}`.trim() : ""
 
   const handleLogout = () => {
     logout()
@@ -49,7 +50,7 @@ export function AppLayout() {
         <header className="sticky top-0 z-30 flex min-h-16 h-auto py-2 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6 sm:h-16 sm:py-0">
           {/* Logo only on mobile in header */}
           <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80 md:hidden">
-            <img src="/ista.jpeg" alt="Logo ISTA" className="size-8 shrink-0 rounded-sm object-cover" />
+            <img src={istaLogo} alt="Logo ISTA" className="size-8 shrink-0 rounded-md object-cover border border-border bg-white p-0.5 shadow-sm" />
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-tighter leading-none">
                 ISTA<br />PORTAL
@@ -113,7 +114,7 @@ export function AppLayout() {
                 >
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-primary/10 text-xs font-black text-primary uppercase">
-                      {user ? getInitials(user.first_name, user.family_name, user.last_name || "") : "?"}
+                      {user ? getInitials(user.first_name, user.middle_name, user.last_name || "") : "?"}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden text-xs font-bold text-foreground sm:inline uppercase tracking-tight">

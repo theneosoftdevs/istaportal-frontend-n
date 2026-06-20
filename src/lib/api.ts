@@ -103,7 +103,7 @@ async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  const token = localStorage.getItem("ista-token")
+  const token = localStorage.getItem("fino_token")
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -113,8 +113,9 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal,
+  credentials: 'include',
+  body: body !== undefined ? JSON.stringify(body) : undefined,
+  signal,
   })
 
   if (!res.ok) {
@@ -170,8 +171,8 @@ export const facultyApi = {
 }
 
 export const promotionApi = {
-  list:   (facultyId?: string) => {
-    const qs = facultyId ? `?facultyId=${facultyId}` : ""
+  list:   (faculty_id?: string) => {
+    const qs = faculty_id ? `?faculty_id=${faculty_id}` : ""
     return api.get<import("@/types").Promotion[]>(`${ENDPOINTS.promotions.base}${qs}`)
   },
   get:    (id: string)         => api.get<import("@/types").Promotion>(ENDPOINTS.promotions.detail(id)),
@@ -189,8 +190,8 @@ export const courseApi = {
   create: (body: unknown)      => api.post<import("@/types").Course>(ENDPOINTS.courses.base, body),
   update: (id: string, b: unknown) => api.put<import("@/types").Course>(ENDPOINTS.courses.detail(id), b),
   delete: (id: string)         => api.delete<void>(ENDPOINTS.courses.detail(id)),
-  assignTeacher: (courseId: string, teacherId: string) =>
-    api.patch<import("@/types").Course>(ENDPOINTS.courses.teacher(courseId), { teacherId }),
+  assignTeacher: (course_id: string, teacher_id: string) =>
+    api.patch<import("@/types").Course>(ENDPOINTS.courses.teacher(course_id), { teacher_id }),
 }
 
 export const scheduleApi = {

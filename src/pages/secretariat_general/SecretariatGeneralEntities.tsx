@@ -46,23 +46,23 @@ export function SecretariatGeneralEntities() {
   const [promOpen, setPromOpen] = useState(false)
   const [promForm, setPromForm] = useState({
     name: "",
-    facultyId: "",
+    faculty_id: "",
   })
 
   const { data: faculties, loading: facLoading } = usePageData((d) => {
     return d.faculties.map((f) => ({
       ...f,
-      studentCount: d.students.filter((s) => s.facultyId === f.id).length,
-      activeStudents: d.students.filter((s) => s.facultyId === f.id && s.status === "active").length,
-      courseCount: d.courses.filter((c) => c.facultyId === f.id).length,
-      teacherCount: d.teachers.filter((t) => t.facultyId === f.id).length,
-      promotionCount: d.promotions.filter((p) => p.facultyId === f.id).length,
+      studentCount: d.students.filter((s) => s.faculty_id === f.id).length,
+      activeStudents: d.students.filter((s) => s.faculty_id === f.id && s.status === "active").length,
+      courseCount: d.courses.filter((c) => c.faculty_id === f.id).length,
+      teacherCount: d.teachers.filter((t) => t.faculty_id === f.id).length,
+      promotionCount: d.promotions.filter((p) => p.faculty_id === f.id).length,
     }))
   })
 
   const promotionRows: PromotionRow[] = store.promotions.map(p => ({
     ...p,
-    facultyName: p.faculty?.name || store.faculties.find(f => f.id === p.facultyId)?.name || "—"
+    facultyName: p.faculty?.name || store.faculties.find(f => f.id === p.faculty_id)?.name || "—"
   }))
 
   const handleAddFaculty = async () => {
@@ -82,14 +82,14 @@ export function SecretariatGeneralEntities() {
   }
 
   const handleAddPromotion = async () => {
-    if (!promForm.name || !promForm.facultyId) return
+    if (!promForm.name || !promForm.faculty_id) return
     try {
       await promotionApi.create({
         name: promForm.name,
-        faculty_id: promForm.facultyId
+        faculty_id: promForm.faculty_id
       })
       toast.success("Promotion créée avec succès")
-      setPromForm({ name: "", facultyId: "" })
+      setPromForm({ name: "", faculty_id: "" })
       setPromOpen(false)
       window.location.reload()
     } catch (e: any) {
@@ -222,7 +222,7 @@ export function SecretariatGeneralEntities() {
             </div>
             <div className="space-y-2">
               <Label>Faculté</Label>
-              <Select value={promForm.facultyId} onValueChange={v => setPromForm(f => ({ ...f, facultyId: v }))}>
+              <Select value={promForm.faculty_id} onValueChange={v => setPromForm(f => ({ ...f, faculty_id: v }))}>
                 <SelectTrigger><SelectValue placeholder="Choisir une faculté..." /></SelectTrigger>
                 <SelectContent>
                   {store.faculties.map(f => (
@@ -234,7 +234,7 @@ export function SecretariatGeneralEntities() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPromOpen(false)}>Annuler</Button>
-            <Button onClick={handleAddPromotion} disabled={!promForm.name || !promForm.facultyId}>Créer</Button>
+            <Button onClick={handleAddPromotion} disabled={!promForm.name || !promForm.faculty_id}>Créer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

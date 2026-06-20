@@ -60,7 +60,7 @@ export function StudentDashboard() {
         </>
       }
     >
-      <Card className="lg:col-span-2">
+      <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle>{i18n.student.next_courses}</CardTitle>
         </CardHeader>

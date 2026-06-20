@@ -33,7 +33,7 @@ export function ApparitoratDashboard() {
       header: i18n.apparitorat.student,
       render: (s) => (
         <span className="font-medium text-foreground">
-          {s.first_name} {s.family_name} {s.last_name}
+          {s.first_name} {s.middle_name || ""} {s.last_name}
         </span>
       ),
     },
@@ -45,7 +45,7 @@ export function ApparitoratDashboard() {
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
-          <StatusBadge status={s.status} />
+          <StatusBadge status={s.status || "active"} />
         </div>
       ),
     },

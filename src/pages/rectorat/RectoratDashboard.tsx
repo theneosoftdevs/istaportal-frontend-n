@@ -29,7 +29,7 @@ export function RectoratDashboard() {
 
   if (loading || !data) return <Loader fullHeight />
 
-  const userName = user ? `${user.first_name} ${user.family_name} ${user.last_name || ""}`.trim() : i18n.rectorat.fallback_name
+  const userName = user ? `${user.first_name} ${user.middle_name || ""} ${user.last_name || ""}`.trim() : i18n.rectorat.fallback_name
 
   return (
     <>
@@ -69,8 +69,8 @@ export function RectoratDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>{i18n.rectorat.students_by_faculty}</CardTitle>
             <CardDescription>{i18n.rectorat.students_enrolled}</CardDescription>

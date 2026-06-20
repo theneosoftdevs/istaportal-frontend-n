@@ -28,7 +28,7 @@ interface GradeStudent extends Student {
 export function TeacherGrades() {
   const { user } = useAuth()
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
-  const [assessmentTitle, setAssessmentTitle] = useState<string>("")
+  const [assessment_title, setAssessmentTitle] = useState<string>("")
   const [assessmentType, setAssessmentType] = useState<Grade["type"]>("Interro")
   const [session, setSession] = useState<string>("Session Normale")
 
@@ -57,24 +57,24 @@ export function TeacherGrades() {
 
   // 3. Associe les notes existantes aux étudiants pour le contexte actuel (Course + Title + Type)
   const gradedContext = useMemo(() => {
-    if (!selectedCourseId || !assessmentTitle || !data?.grades) return []
+    if (!selectedCourseId || !assessment_title || !data?.grades) return []
 
     return studentsInPromotion.map(student => {
       const grade = data.grades.find(g =>
         g.student_id === student.id &&
         g.course_id === selectedCourseId &&
         g.type === assessmentType &&
-        g.assessmentTitle === assessmentTitle
+        g.assessment_title === assessment_title
       )
       return { ...student, grade }
     })
-  }, [selectedCourseId, assessmentTitle, assessmentType, data?.grades, studentsInPromotion])
+  }, [selectedCourseId, assessment_title, assessmentType, data?.grades, studentsInPromotion])
 
   const alreadyGraded = gradedContext.filter(s => !!s.grade)
   const toBeGraded = gradedContext.filter(s => !s.grade)
 
   const handleScoreChange = async (student_id: string, scoreStr: string) => {
-    if (!selectedCourseId || !assessmentTitle) {
+    if (!selectedCourseId || !assessment_title) {
       toast.error("Veuillez sélectionner un cours et donner un titre à l'évaluation")
       return
     }
@@ -90,7 +90,7 @@ export function TeacherGrades() {
         score,
         session,
         type: assessmentType,
-        assessmentTitle
+        assessment_title
       })
       toast.success("Note enregistrée")
     } catch (e) {
@@ -174,7 +174,7 @@ export function TeacherGrades() {
       {/* Configuration de l'évaluation */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label>Cours</Label>
               <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
@@ -193,7 +193,7 @@ export function TeacherGrades() {
               <Input
                 placeholder="Ex: Chapitre 1, Examen Mi-Semestre..."
                 className="bg-background"
-                value={assessmentTitle}
+                value={assessment_title}
                 onChange={e => setAssessmentTitle(e.target.value)}
               />
             </div>
@@ -229,7 +229,7 @@ export function TeacherGrades() {
         </CardContent>
       </Card>
 
-      {!assessmentTitle ? (
+      {!assessment_title ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
             <Filter className="mb-4 size-12 opacity-20" />
@@ -237,7 +237,7 @@ export function TeacherGrades() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Section: À coter */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">

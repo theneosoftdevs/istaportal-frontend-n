@@ -1,6 +1,6 @@
 // src/contexts/AuthContext.tsx
 // Real JWT-based authentication context.
-// Token is stored under "ista-token" in localStorage.
+// Token is stored under "fino_token" in localStorage.
 // On mount it validates any existing token by calling /auth/me.
 import {
   createContext,
@@ -15,8 +15,8 @@ import { authApi } from "@/api/endpoints/auth"
 import { ApiError } from "@/api/client"
 import type { Role, User, RoleName } from "@/types"
 
-const TOKEN_KEY = "ista-token"
-const USER_KEY = "ista-user"
+const TOKEN_KEY = "fino_token"
+const USER_KEY = "fino_user"
 
 interface AuthContextValue {
   user: User | null
@@ -45,7 +45,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   // On mount: validate the session. 
-  // If your Go backend doesn't have /auth/me, we rely on the stored user object.
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY)
     if (!token) {
@@ -55,21 +54,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Attempt to refresh user data if endpoint exists, otherwise just keep current state
     authApi.me()
-      .then((userData) => {
+      .then((res: any) => {
+        // Normalize possible envelope shapes: { user }, { data: user }, or user at root
+        const userData = res && (res.user || res.data || res)
         if (userData) {
-          setUser(userData)
+          // Normalize role: backend may return role as string (e.g. "apparitorat")
+          if (userData.role && typeof userData.role === 'string') {
+            userData.role = { nom: userData.role }
+          }
+          setUser(userData as User)
           localStorage.setItem(USER_KEY, JSON.stringify(userData))
         }
       })
       .catch((err) => {
         console.warn("[Auth] Session validation failed:", err)
-        // If 404, the endpoint might not exist, we keep the local user
-        if (err.status === 404) {
-          console.info("[Auth] /auth/me not found, using local session.")
-        } else {
-          // For other errors (401, etc.), clear session
+        if (err.status !== 404) {
           localStorage.removeItem(TOKEN_KEY)
           localStorage.removeItem(USER_KEY)
           setUser(null)
@@ -79,13 +79,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login({ email, password })
-    if (res.token) {
-      localStorage.setItem(TOKEN_KEY, res.token)
+    const res = await authApi.login({ email, password }) as any
+
+    // Extract token from multiple possible shapes: token, access_token, or data.token
+    const token = res.token || res.access_token || res.data?.token
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token)
     }
-    // Ensure we store the user object too
-    localStorage.setItem(USER_KEY, JSON.stringify(res))
-    setUser(res)
+
+    // Extract user from multiple possible shapes: user, data.user, or root object
+  const userDataRaw = res.user || res.data?.user || res
+  const userData = userDataRaw || null
+
+  // Normalize role to object with 'nom' property when backend returns a string
+  if (userData && userData.role && typeof userData.role === 'string') {
+    userData.role = { nom: userData.role }
+  }
+
+  localStorage.setItem(USER_KEY, JSON.stringify(userData))
+  setUser(userData as User)
   }, [])
 
   const logout = useCallback(() => {
@@ -102,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      role: user ? (typeof user.role === "object" ? user.role : null) : null,
-      roleName: user ? (typeof user.role === "string" ? user.role : user.role?.nom) : null,
+      role: user?.role || null,
+      roleName: user?.role?.nom || null,
       isAuthenticated: user !== null,
       isLoading,
       login,

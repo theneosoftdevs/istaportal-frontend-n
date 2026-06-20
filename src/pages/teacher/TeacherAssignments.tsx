@@ -38,10 +38,10 @@ export function TeacherAssignments() {
   const store   = useStore()
   const teacher = useCurrentTeacher(store)
 
-  const myCourses     = store.courses.filter((c) => c.teacherId === teacher.id)
-  const myAssignments = store.assignments.filter((a) => a.teacherId === teacher.id)
+  const myCourses     = store.courses.filter((c) => c.teacher_id === teacher.id)
+  const myAssignments = store.assignments.filter((a) => a.teacher_id === teacher.id)
   const mySubmissions = store.submissions.filter((s) =>
-    myAssignments.some((a) => a.id === s.assignmentId),
+    myAssignments.some((a) => a.id === s.assignment_id),
   )
 
   const [createOpen, setCreateOpen] = useState(false)
@@ -49,32 +49,32 @@ export function TeacherAssignments() {
   const [gradeValue, setGradeValue] = useState("")
   const [feedback, setFeedback]     = useState("")
   const [form, setForm] = useState({
-    courseId: "",
+    course_id: "",
     title: "",
     description: "",
-    dueDate: "",
+    due_date: "",
     type: "PDF" as import("@/types").Assignment["type"],
-    deadlineTime: "23:59",
-    durationMinutes: 0,
+    deadline_time: "23:59",
+    duration_minutes: 0,
   })
 
   async function handleCreate() {
-    if (!form.courseId || !form.title.trim() || !form.dueDate) return
+    if (!form.course_id || !form.title.trim() || !form.due_date) return
     try {
       await addAssignment({
         id:          generateId(),
-        courseId:    form.courseId,
-        teacherId:   teacher.id,
+        course_id:    form.course_id,
+        teacher_id:   teacher.id,
         title:       form.title.trim(),
         description: form.description.trim(),
-        dueDate:     form.dueDate,
-        createdAt:   new Date().toISOString().slice(0, 10),
+        due_date:     form.due_date,
+        created_at:   new Date().toISOString().slice(0, 10),
         type:        form.type,
-        deadlineTime: form.deadlineTime,
-        durationMinutes: form.durationMinutes > 0 ? form.durationMinutes : undefined,
+        deadline_time: form.deadline_time,
+        duration_minutes: form.duration_minutes > 0 ? form.duration_minutes : undefined,
       })
       toast.success("Travail créé avec succès")
-      setForm({ courseId: "", title: "", description: "", dueDate: "", type: "PDF", deadlineTime: "23:59", durationMinutes: 0 })
+      setForm({ course_id: "", title: "", description: "", due_date: "", type: "PDF", deadline_time: "23:59", duration_minutes: 0 })
       setCreateOpen(false)
       window.location.reload()
     } catch (e: any) {
@@ -162,8 +162,8 @@ export function TeacherAssignments() {
             </Card>
           ) : (
             myAssignments.map((a) => {
-              const course    = store.courses.find((c) => c.id === a.courseId)
-              const subCount  = store.submissions.filter((s) => s.assignmentId === a.id).length
+              const course    = store.courses.find((c) => c.id === a.course_id)
+              const subCount  = store.submissions.filter((s) => s.assignment_id === a.id).length
               return (
                 <Card key={a.id}>
                   <CardHeader className="pb-2">
@@ -171,7 +171,7 @@ export function TeacherAssignments() {
                       <div className="min-w-0 flex-1">
                         <CardTitle className="text-base">{a.title}</CardTitle>
                         <CardDescription>
-                          {course?.name ?? "Cours"} · Échéance : {a.dueDate}
+                          {course?.name ?? "Cours"} · Échéance : {a.due_date}
                         </CardDescription>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -209,19 +209,19 @@ export function TeacherAssignments() {
             </Card>
           ) : (
             mySubmissions.map((s) => {
-              const assignment = store.assignments.find((a) => a.id === s.assignmentId)
-              const student    = store.students.find((st) => st.id === s.studentId)
+              const assignment = store.assignments.find((a) => a.id === s.assignment_id)
+              const student    = store.students.find((st) => st.id === s.student_id)
               return (
                 <Card key={s.id}>
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <CardTitle className="text-sm font-semibold text-foreground">
-                          {student ? `${student.first_name} ${student.family_name} ${student.last_name}` : s.studentId}
+                          {student ? `${student.first_name} ${student.middle_name} ${student.last_name}` : s.student_id}
                         </CardTitle>
                         <CardDescription>
                           {assignment?.title ?? "Travail"} · Remis le{" "}
-                          {new Date(s.submittedAt).toLocaleDateString("fr-FR")}
+                          {new Date(s.submitted_at).toLocaleDateString("fr-FR")}
                         </CardDescription>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -280,8 +280,8 @@ export function TeacherAssignments() {
             <div className="space-y-1.5">
               <Label>Cours</Label>
               <Select
-                value={form.courseId}
-                onValueChange={(v) => setForm((f) => ({ ...f, courseId: v }))}
+                value={form.course_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, course_id: v }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un cours…" />
@@ -333,8 +333,8 @@ export function TeacherAssignments() {
                 <Label>Date limite</Label>
                 <Input
                   type="date"
-                  value={form.dueDate}
-                  onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+                  value={form.due_date}
+                  onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
                 />
               </div>
             </div>
@@ -343,8 +343,8 @@ export function TeacherAssignments() {
                 <Label>Heure limite</Label>
                 <Input
                   type="time"
-                  value={form.deadlineTime}
-                  onChange={(e) => setForm((f) => ({ ...f, deadlineTime: e.target.value }))}
+                  value={form.deadline_time}
+                  onChange={(e) => setForm((f) => ({ ...f, deadline_time: e.target.value }))}
                 />
               </div>
               {form.type === "Formulaire" && (
@@ -354,8 +354,8 @@ export function TeacherAssignments() {
                     type="number"
                     min={0}
                     placeholder="Ex : 15"
-                    value={form.durationMinutes || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, durationMinutes: Number(e.target.value) }))}
+                    value={form.duration_minutes || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, duration_minutes: Number(e.target.value) }))}
                   />
                 </div>
               )}
@@ -367,7 +367,7 @@ export function TeacherAssignments() {
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={!form.courseId || !form.title.trim() || !form.dueDate}
+              disabled={!form.course_id || !form.title.trim() || !form.due_date}
             >
               Créer
             </Button>

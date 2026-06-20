@@ -1,7 +1,8 @@
 import { NavLink } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/contexts/AppContext"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui"
+import istaLogo from "@/assets/ista.jpeg"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { i18n } from "@/lib/i18n"
 
 interface AppSidebarProps {
@@ -19,12 +20,12 @@ export function AppSidebar({ mode }: AppSidebarProps) {
         isRail ? "w-[80px]" : "w-64"
       )}
     >
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border px-4 transition-all duration-500", isRail ? "justify-center" : "gap-3")}>
+      <div className={cn("flex h-16 items-center border-b border-sidebar-border transition-all duration-500", isRail ? "px-2 justify-center" : "px-4 gap-3")}>
         <img
-          src="/ista.jpeg"
+          src={istaLogo}
           alt="Logo ISTA"
           className={cn(
-            "shrink-0 rounded-lg object-cover shadow-md transition-all duration-500",
+            "shrink-0 rounded-lg object-cover shadow-md border border-sidebar-border bg-white p-0.5 transition-all duration-500",
             isRail ? "size-11" : "size-9"
           )}
         />
@@ -38,7 +39,7 @@ export function AppSidebar({ mode }: AppSidebarProps) {
         )}
       </div>
 
-      <nav className={cn("flex-1 space-y-2 overflow-y-auto", isRail ? "p-2" : "p-3")}>
+      <nav className={cn("flex-1 space-y-2 overflow-y-auto w-full", isRail ? "p-2 flex flex-col items-center" : "p-3")}>
         <TooltipProvider delayDuration={0}>
           {nav.map((item) => {
             const link = (

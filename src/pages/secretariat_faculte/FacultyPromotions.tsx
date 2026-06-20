@@ -24,12 +24,12 @@ interface PromotionRow extends Promotion {
 
 export function FacultyPromotions() {
   const { user } = useAuth()
-  const [facultyId, setFacultyId] = useState(user?.facultyId || "all")
+  const [faculty_id, setFacultyId] = useState(user?.faculty_id || "all")
 
   const { data, loading } = usePageData((d) => {
     const rows: PromotionRow[] = d.promotions.map((p) => {
-      const faculty = d.faculties.find((f) => f.id === p.facultyId)
-      const realCount = d.students.filter((s) => s.promotionId === p.id).length
+      const faculty = d.faculties.find((f) => f.id === p.faculty_id)
+      const realCount = d.students.filter((s) => s.promotion_id === p.id).length
       return {
         ...p,
         facultyName: faculty?.name ?? "—",
@@ -43,7 +43,7 @@ export function FacultyPromotions() {
   if (loading || !data) return <Loader fullHeight />
 
   const filtered =
-    facultyId === "all" ? data.rows : data.rows.filter((r) => r.facultyId === facultyId)
+    faculty_id === "all" ? data.rows : data.rows.filter((r) => r.faculty_id === faculty_id)
 
   const totalStudents = filtered.reduce((acc, r) => acc + r.realStudentCount, 0)
 
@@ -83,7 +83,7 @@ export function FacultyPromotions() {
         title="Promotions"
         subtitle="Gestion des promotions et des effectifs."
         action={
-          <Select value={facultyId} onValueChange={setFacultyId}>
+          <Select value={faculty_id} onValueChange={setFacultyId}>
             <SelectTrigger className="w-56">
               <SelectValue placeholder="Toutes les facultés" />
             </SelectTrigger>

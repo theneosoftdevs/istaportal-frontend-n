@@ -40,16 +40,16 @@ export function ApparitoratInscriptions() {
     let list = data.students
 
     if (facultyFilter !== "all") {
-      list = list.filter(s => s.facultyId === facultyFilter)
+      list = list.filter(s => s.faculty_id === facultyFilter)
     }
     if (promotionFilter !== "all") {
-      list = list.filter(s => s.promotionId === promotionFilter)
+      list = list.filter(s => s.promotion_id === promotionFilter)
     }
 
     const q = query.trim().toLowerCase()
     if (q) {
       list = list.filter((s) =>
-        [s.first_name, s.family_name, s.last_name, s.matricule, s.email]
+        [s.first_name, s.middle_name, s.last_name, s.matricule, s.email]
           .join(" ")
           .toLowerCase()
           .includes(q),
@@ -79,7 +79,7 @@ export function ApparitoratInscriptions() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.first_name} {s.family_name} {s.last_name}
+            {`${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`.replace(/\s+/g, ' ').trim()}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
@@ -93,18 +93,18 @@ export function ApparitoratInscriptions() {
     {
       key: "faculty",
       header: "Faculté",
-      render: (s) => data?.facultyName(s.facultyId),
+      render: (s) => data?.facultyName(s.faculty_id),
     },
     {
       key: "promotion",
       header: "Promotion",
-      render: (s) => data?.promotionName(s.promotionId),
+      render: (s) => data?.promotionName(s.promotion_id || ""),
     },
     {
       key: "average",
       header: "Moyenne",
       align: "center",
-      render: (s) => (s.average > 0 ? `${s.average.toFixed(1)}/20` : "—"),
+      render: (s) => ((s.average || 0) > 0 ? `${(s.average || 0).toFixed(1)}/20` : "—"),
     },
     {
       key: "status",
@@ -112,7 +112,7 @@ export function ApparitoratInscriptions() {
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
-          <StatusBadge status={s.status} />
+          <StatusBadge status={s.status || "active"} />
         </div>
       ),
     },
@@ -151,7 +151,7 @@ export function ApparitoratInscriptions() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KPICard
           title="Total étudiants"
           value={counts.total}

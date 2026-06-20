@@ -25,20 +25,20 @@ export function StudentAssignments() {
   const student = useCurrentStudent(store)
 
   const myCourseIds = store.courses
-    .filter((c) => c.promotionId === student.promotionId)
+    .filter((c) => c.promotion_id === student.promotion_id)
     .map((c) => c.id)
 
   const assignments = store.assignments
-    .filter((a) => myCourseIds.includes(a.courseId))
+    .filter((a) => myCourseIds.includes(a.course_id))
     .map((a) => {
-      const course      = store.courses.find((c) => c.id === a.courseId)
+      const course      = store.courses.find((c) => c.id === a.course_id)
       const submission  = store.submissions.find(
-        (s) => s.assignmentId === a.id && s.studentId === student.id,
+        (s) => s.assignment_id === a.id && s.student_id === student.id,
       )
-      const isOverdue = !submission && new Date(a.dueDate) < new Date()
+      const isOverdue = !submission && new Date(a.due_date) < new Date()
       return { ...a, courseName: course?.name ?? "Cours", submission, isOverdue }
     })
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
 
   const todo      = assignments.filter((a) => !a.submission && !a.isOverdue).length
   const submitted = assignments.filter((a) => a.submission).length
@@ -55,10 +55,10 @@ export function StudentAssignments() {
     // Simulate upload
     setTimeout(() => {
       addSubmission({
-        assignmentId: submitTarget.id,
-        studentId:    student.id,
+        assignment_id: submitTarget.id,
+        student_id:    student.id,
         content,
-        submittedAt:  new Date().toISOString(),
+        submitted_at:  new Date().toISOString(),
       })
       setIsUploading(false)
       setSubmitTarget(null)
@@ -113,7 +113,7 @@ export function StudentAssignments() {
                     <div className="min-w-0 flex-1">
                       <CardTitle className="text-base">{a.title}</CardTitle>
                       <CardDescription>
-                        {a.courseName} · Échéance : {a.dueDate}
+                        {a.courseName} · Échéance : {a.due_date}
                       </CardDescription>
                     </div>
                     <Badge variant="outline" className={`shrink-0 ${statusClass}`}>

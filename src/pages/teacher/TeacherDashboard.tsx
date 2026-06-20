@@ -61,7 +61,7 @@ export function TeacherDashboard() {
         </>
       }
     >
-      <Card className="lg:col-span-2">
+      <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle>{i18n.teacher.today_schedule}</CardTitle>
           <CardDescription>

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useStore } from "@/hooks/usePageData"
-import { studentApi } from "@/api/endpoints/users"
+import { studentApi, userApi } from "@/api/endpoints/users"
 import type { Student } from "@/types"
 import { toast } from "sonner"
 import { i18n } from "@/lib/i18n"
@@ -44,21 +44,17 @@ export function EditStudentDialog({ student, open, onOpenChange }: EditStudentDi
         ...student,
         // Map nested user data to flat fields for the form if they are missing
         first_name: student.first_name || student.user?.first_name || "",
-        family_name: student.family_name || student.user?.last_name || "",
-        last_name: student.last_name || student.user?.middle_name || "",
+        middle_name: (student as any).middle_name || (student as any).family_name || student.user?.middle_name || "",
+        last_name: student.last_name || student.user?.last_name || "",
         email: student.email || student.user?.email || "",
         phone_number: student.phone_number || (student as any).phone || "",
         // Ensure academic IDs are correctly mapped
-        faculty_id: student.faculty_id || student.promotion?.faculty?.id || "",
-        promotion_id: student.promotion_id || student.promotion?.id || ""
+        faculty_id: student.faculty_id || student.promotion?.faculty?.id || ""
       } as Student)
     }
   }, [student])
 
-  const promotions = useMemo(
-    () => store.promotions.filter((p) => !form?.faculty_id || (p.faculty_id || p.facultyId) === form.faculty_id),
-    [store.promotions, form?.faculty_id],
-  )
+  const promotions: any[] = []
 
   if (!form) return null
 
@@ -69,25 +65,75 @@ export function EditStudentDialog({ student, open, onOpenChange }: EditStudentDi
   const validate = () => {
     const e: Record<string, string> = {}
     if (!form.first_name?.trim()) e.first_name = "Le prénom est requis."
-    if (!form.family_name?.trim()) e.family_name = "Le nom est requis."
+    // postnom (middle_name) is optional
+    if (!form.last_name?.trim()) e.last_name = "Le nom est requis."
     if (!form.email?.trim()) e.email = "L'email est requis."
     if (!form.faculty_id) e.faculty_id = "La faculté est requise."
-    if (!form.promotion_id) e.promotion_id = "La promotion est requise."
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!validate() || !form.user_id) return
+    if (!form || !form.user_id) return
+    // only validate fields we intend to send
+    if (!validate()) return
 
     setIsLoading(true)
     try {
-      await studentApi.update(form.user_id, {
-        phone_number: form.phone_number || (form as any).phone || "",
-        promotion_id: form.promotion_id,
-      })
-      toast.success(`${i18n.apparitorat.student} mis à jour avec succès`)
+      const payload = {
+      first_name: form.first_name,
+      middle_name: (form as any).middle_name || "",
+      last_name: form.last_name,
+      email: form.email,
+      phone_number: form.phone_number || (form as any).phone || "",
+      faculty_id: form.faculty_id,
+      status: form.status,
+      gender: form.gender,
+      }
+
+      const userPayload = {
+        first_name: form.first_name,
+        middle_name: (form as any).middle_name || "",
+        last_name: form.last_name,
+        email: form.email,
+        gender: form.gender,
+      }
+
+      const profilePayload = {
+      phone_number: form.phone_number || (form as any).phone || "",
+      faculty_id: form.faculty_id,
+      status: form.status,
+      }
+
+      // Try updating user core fields first, then profile fields.
+      const results = await Promise.allSettled([
+        // Update core user info if backend exposes /users/:id
+        (async () => {
+          try {
+            await userApi.update(form.user_id, userPayload)
+            return { ok: true }
+          } catch (e) {
+            return { ok: false, err: e }
+          }
+        })(),
+        (async () => {
+          try {
+            await studentApi.updateProfile(form.user_id, profilePayload)
+            return { ok: true }
+          } catch (e) {
+            return { ok: false, err: e }
+          }
+        })(),
+      ])
+
+      const failed = results.filter(r => (r as any).status === 'rejected' || (r as any).value?.ok === false)
+      if (failed.length > 0) {
+        toast.error('La mise à jour a partiellement échoué. Vérifiez les permissions et le format des données.')
+      } else {
+        toast.success(`${i18n.apparitorat.student} mis à jour avec succès`)
+      }
+
       onOpenChange(false)
       window.location.reload()
     } catch (err: any) {
@@ -110,19 +156,19 @@ export function EditStudentDialog({ student, open, onOpenChange }: EditStudentDi
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-family_name">Nom</Label>
-              <Input
-                id="edit-family_name"
-                value={form.family_name}
-                onChange={(e) => set("family_name", e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-last_name">Postnom</Label>
+              <Label htmlFor="edit-last_name">Nom</Label>
               <Input
                 id="edit-last_name"
                 value={form.last_name}
                 onChange={(e) => set("last_name", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-middle_name">Postnom</Label>
+              <Input
+                id="edit-middle_name"
+                value={(form as any).middle_name}
+                onChange={(e) => set("middle_name" as any, e.target.value)}
               />
             </div>
             <div className="space-y-1.5">
@@ -199,7 +245,6 @@ export function EditStudentDialog({ student, open, onOpenChange }: EditStudentDi
                 value={form.faculty_id}
                 onValueChange={(v) => {
                   set("faculty_id", v)
-                  set("promotion_id", "")
                 }}
               >
                 <SelectTrigger>
@@ -209,25 +254,6 @@ export function EditStudentDialog({ student, open, onOpenChange }: EditStudentDi
                   {store.faculties.map((f) => (
                     <SelectItem key={f.id} value={f.id}>
                       {f.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Promotion</Label>
-              <Select
-                value={form.promotion_id}
-                onValueChange={(v) => set("promotion_id", v)}
-                disabled={!form.faculty_id}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {promotions.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

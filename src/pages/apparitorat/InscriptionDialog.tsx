@@ -25,6 +25,7 @@ import {
 import { StudentSelect } from "@/components/ui/StudentSelect"
 import { useStore } from "@/hooks/usePageData"
 import { toast } from "sonner"
+import type { Student } from "@/types"
 
 interface FormState {
   first_name: string
@@ -35,7 +36,6 @@ interface FormState {
   birth_date: string
   phone_number: string
   faculty_id: string
-  promotion_id: string
 }
 
 interface InscriptionDialogProps {
@@ -51,7 +51,6 @@ const EMPTY: FormState = {
   birth_date: "",
   phone_number: "",
   faculty_id: "",
-  promotion_id: "",
 }
 
 export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
@@ -85,16 +84,12 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
     if (!form.birth_date) e.birth_date = "La date de naissance est requise."
     if (!form.phone_number.trim()) e.phone_number = "Le numéro de téléphone est requis."
     if (!form.faculty_id) e.faculty_id = "La faculté est requise."
-    if (!form.promotion_id) e.promotion_id = "La promotion est requise."
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  // Filter promotions based on selected faculty
-  const filteredPromotions = useMemo(() => {
-    if (!form.faculty_id) return []
-    return store.promotions.filter((p) => p.faculty_id === form.faculty_id || p.facultyId === form.faculty_id)
-  }, [store.promotions, form.faculty_id])
+  // Promotions removed from the new flow
+  const filteredPromotions: any[] = []
 
   const handleNextStep = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,6 +110,7 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
         last_name: form.last_name.trim(),
         gender: form.gender as "M" | "F",
         email: form.email.trim(),
+        role_id: 7, // Role student
       })
 
       const userId = authRes?.user_id || authRes?.id
@@ -145,11 +141,10 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
         : `${form.birth_date}T00:00:00Z`
 
       const student = await studentApi.createProfile({
-        user_id: createdUserId,
-        promotion_id: form.promotion_id,
-        faculty_id: form.faculty_id,
-        birth_date: birthDateISO,
-        phone_number: form.phone_number.trim(),
+      user_id: createdUserId,
+      faculty_id: form.faculty_id,
+      birth_date: birthDateISO,
+      phone_number: form.phone_number.trim(),
       })
 
       toast.success(`Inscription complète pour ${form.email} !`)
@@ -317,11 +312,10 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
                       setCreatedUserId(s.user_id)
                       set("birth_date", s.birth_date ? s.birth_date.split("T")[0] : "")
                       set("phone_number", s.phone_number || "")
-                      set("faculty_id", s.faculty_id || s.promotion?.faculty?.id || "")
-                      set("promotion_id", s.promotion_id || s.promotion?.id || "")
+                      set("faculty_id", s.faculty_id || s.promotion?.faculty_id || "")
                       set("first_name", s.first_name || s.user?.first_name || "")
-                      set("last_name", s.family_name || s.user?.last_name || "")
-                      set("middle_name", s.last_name || s.user?.middle_name || "")
+                      set("middle_name", s.middle_name || s.user?.middle_name || "")
+                      set("last_name", s.last_name || s.user?.last_name || "")
                       set("email", s.email || s.user?.email || "")
                       set("gender", (s.gender || s.user?.gender || "") as "M" | "F")
                     }
@@ -362,7 +356,6 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
                   value={form.faculty_id}
                   onValueChange={(v) => {
                     set("faculty_id", v)
-                    set("promotion_id", "") // Reset promotion when faculty changes
                   }}
                 >
                   <SelectTrigger aria-invalid={!!errors.faculty_id}>
@@ -379,26 +372,6 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
                 {errors.faculty_id && <p className="text-xs text-destructive">{errors.faculty_id}</p>}
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Promotion</Label>
-                <Select
-                  value={form.promotion_id}
-                  onValueChange={(v) => set("promotion_id", v)}
-                  disabled={!form.faculty_id}
-                >
-                  <SelectTrigger aria-invalid={!!errors.promotion_id}>
-                    <SelectValue placeholder={form.faculty_id ? "Choisir une promotion" : "Sélectionnez d'abord une faculté"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredPromotions.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.promotion_id && <p className="text-xs text-destructive">{errors.promotion_id}</p>}
-              </div>
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0 pt-4">

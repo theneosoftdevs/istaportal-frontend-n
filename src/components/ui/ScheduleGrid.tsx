@@ -33,7 +33,7 @@ export function ScheduleGrid({ slots, courses, showDay = true }: ScheduleGridPro
   return (
     <ul className="divide-y divide-border">
       {sorted.map((slot) => {
-        const course = courseName(slot.courseId)
+        const course = courseName(slot.course_id)
         return (
           <li key={slot.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
             <div className="flex w-14 shrink-0 flex-col items-center rounded-lg bg-primary/10 py-2 text-primary">

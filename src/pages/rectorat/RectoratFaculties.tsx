@@ -26,11 +26,11 @@ export function RectoratFaculties() {
       name: f.name,
       code: f.code,
       secretaryName: f.secretary ? `${f.secretary.first_name} ${f.secretary.last_name}` : "—",
-      studentCount: d.students.filter((s) => s.facultyId === f.id).length,
-      activeCount: d.students.filter((s) => s.facultyId === f.id && s.status === "active").length,
-      teacherCount: d.teachers.filter((t) => t.facultyId === f.id).length,
-      courseCount: d.courses.filter((c) => c.facultyId === f.id).length,
-      promotionCount: d.promotions.filter((p) => p.facultyId === f.id).length,
+      studentCount: d.students.filter((s) => s.faculty_id === f.id).length,
+      activeCount: d.students.filter((s) => s.faculty_id === f.id && s.status === "active").length,
+      teacherCount: d.teachers.filter((t) => t.faculty_id === f.id).length,
+      courseCount: d.courses.filter((c) => c.faculty_id === f.id).length,
+      promotionCount: d.promotions.filter((p) => p.faculty_id === f.id).length,
     }))
     return rows
   })

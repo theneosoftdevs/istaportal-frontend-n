@@ -5,7 +5,7 @@ import { studentApi, teacherApi } from "@/api/endpoints/users"
 import { announcementApi, notificationApi } from "@/api/endpoints/communications"
 
 export const useFaculties = () => useFetch(() => facultyApi.list(), [])
-export const usePromotions = (facultyId?: string) => useFetch(() => promotionApi.list(facultyId), [facultyId])
+export const usePromotions = (faculty_id?: string) => useFetch(() => promotionApi.list(faculty_id), [faculty_id])
 export const useCourses = (params?: Record<string, string>) => useFetch(() => courseApi.list(params), [JSON.stringify(params)])
 export const useRooms = () => useFetch(() => roomApi.list(), [])
 export const useSchedules = (params?: Record<string, string>) => useFetch(() => scheduleApi.list(params), [JSON.stringify(params)])

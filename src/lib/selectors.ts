@@ -1,5 +1,5 @@
 // src/lib/selectors.ts
-import type { AppData, Student, Teacher, Course, ScheduleSlot, Grade, Announcement } from "../types"
+import type { AppData, Student, Teacher, Course, ScheduleSlot, Grade, Announcement, RoleName } from "../types"
 
 /**
  * Enriches a student object with faculty code and promotion name.
@@ -20,7 +20,7 @@ export function enrichStudent(d: AppData, student: Student) {
   return {
     ...student,
     first_name: user.first_name,
-    family_name: user.middle_name || "",
+    middle_name: user.middle_name || "",
     last_name: user.last_name,
     gender: user.gender,
     email: user.email,
@@ -51,7 +51,7 @@ export function enrichCourse(d: AppData, course: Course) {
   return {
     ...course,
     promotionName: promotion?.name ?? "—",
-    teacherName: teacher ? `${teacher.user?.first_name} ${teacher.user?.last_name}` : "Non attribué",
+    teacherName: teacher ? `${teacher.user?.first_name} ${teacher.user?.middle_name || ""} ${teacher.user?.last_name || ""}`.trim() : "Non attribué",
     teacherTitle: teacher?.title ?? "",
     roomName: room?.name ?? "Non attribuée",
     schedules
@@ -70,7 +70,10 @@ export function getEnrichedCourses(d: AppData) {
  */
 export function getAnnouncementsFor(d: AppData, audience: RoleName | "all" | "global") {
   return d.announcements
-    .filter((a) => a.audience === "all" || a.audience === audience)
+    .filter((a) => {
+      const aAudience = typeof a.audience === "string" ? a.audience : a.audience.nom
+      return aAudience === "all" || aAudience === audience
+    })
     .sort((a, b) => b.date.localeCompare(a.date))
 }
 
@@ -83,7 +86,7 @@ export function getTeacherDashboardData(d: AppData, userId?: string, todayDayNam
   
   const courses = d.courses.filter((c) => c.teacher_id === teacher.id)
   const promotionIds = new Set(courses.map((c) => c.promotion_id))
-  const students = d.students.filter((s) => promotionIds.has(s.promotion_id))
+  const students = d.students.filter((s) => s.promotion_id && promotionIds.has(s.promotion_id))
   const courseIds = new Set(courses.map((c) => c.id))
   const pendingGrades = d.grades.filter(
     (g) => courseIds.has(g.course_id) && g.status === "pending",
@@ -173,8 +176,8 @@ export function getSecretariatGeneralDashboardData(d: AppData) {
 /**
  * Gets dashboard metrics for a specific Faculty.
  */
-export function getFacultyDashboardData(d: AppData, facultyId: string) {
-  const faculty = d.faculties.find((f) => f.id === facultyId) ?? d.faculties[0]
+export function getFacultyDashboardData(d: AppData, faculty_id: string) {
+  const faculty = d.faculties.find((f) => f.id === faculty_id) ?? d.faculties[0]
   const promotions = d.promotions.filter((p) => p.faculty_id === faculty.id)
   const students = d.students.filter((s) => s.faculty_id === faculty.id)
   const courses = d.courses.filter((c) => d.promotions.find(p => p.id === c.promotion_id)?.faculty_id === faculty.id)

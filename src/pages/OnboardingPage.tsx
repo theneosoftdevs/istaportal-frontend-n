@@ -1,6 +1,6 @@
-// src/pages/OnboardingPage.tsx
 import { Link } from "react-router-dom"
 import { Moon, Sun, Download, ArrowRight } from "lucide-react"
+import istaLogo from "@/assets/ista.jpeg"
 import { Button } from "@/components/ui/button"
 import { useApp } from "@/contexts/AppContext"
 import { toast } from "sonner"
@@ -33,8 +33,8 @@ export function OnboardingPage() {
       {/* Header */}
       <header className="flex h-16 items-center justify-between px-6 border-b border-border/40">
         <div className="flex items-center gap-3">
-          <div className="size-8 overflow-hidden rounded-lg ring-1 ring-border/60">
-            <img src="/ista.jpeg" alt="ISTA" className="size-full object-cover" />
+          <div className="size-8 overflow-hidden rounded-lg border border-border/60 bg-white p-0.5 shadow-sm">
+            <img src={istaLogo} alt="ISTA" className="size-full object-cover rounded-sm" />
           </div>
           <span className="text-sm font-black uppercase tracking-tighter text-foreground">
             ISTA PORTAL
@@ -54,8 +54,8 @@ export function OnboardingPage() {
       {/* Center */}
       <main className="flex flex-1 flex-col items-center justify-center gap-10 px-6 text-center">
         {/* Logo */}
-        <div className="size-20 overflow-hidden rounded-2xl ring-1 ring-border shadow-lg">
-          <img src="/ista.jpeg" alt="ISTA GOMA" className="size-full object-cover" />
+        <div className="size-20 overflow-hidden rounded-2xl border border-border bg-white p-1.5 shadow-lg">
+          <img src={istaLogo} alt="ISTA GOMA" className="size-full object-cover rounded-xl" />
         </div>
 
         {/* Text */}

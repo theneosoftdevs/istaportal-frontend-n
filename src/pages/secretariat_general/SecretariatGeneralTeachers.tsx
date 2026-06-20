@@ -39,35 +39,35 @@ export function SecretariatGeneralTeachers() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({
     first_name: "",
-    family_name:  "",
+    middle_name:  "",
     last_name: "",
     description: "",
     email:     "",
     phone:     "",
-    facultyId: "",
+    faculty_id: "",
     title:     titles[0] ?? "Professeur",
   })
 
   const rows: TeacherRow[] = store.teachers.map((t) => ({
     ...t,
-    facultyName: store.faculties.find((f) => f.id === t.facultyId)?.name ?? "—",
-    courseCount: store.courses.filter((c) => c.teacherId === t.id).length,
+    facultyName: store.faculties.find((f) => f.id === t.faculty_id)?.name ?? "—",
+    courseCount: store.courses.filter((c) => c.teacher_id === t.id).length,
   }))
 
   const active  = rows.filter((r) => r.status === "active").length
   const pending = rows.filter((r) => r.status === "pending").length
 
   function handleAdd() {
-    if (!form.first_name.trim() || !form.family_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.facultyId) return
+    if (!form.first_name.trim() || !form.middle_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.faculty_id) return
     addTeacher({
       matricule: `T${generateId()}`,
       first_name: form.first_name.trim(),
-      family_name: form.family_name.trim(),
+      middle_name: form.middle_name.trim(),
       last_name:  form.last_name.trim(),
       description: form.description.trim(),
       email:     form.email.trim(),
       phone:     form.phone.trim(),
-      facultyId: form.facultyId,
+      faculty_id: form.faculty_id,
       title:     form.title,
       courseIds: [],
       status:    "active",
@@ -76,7 +76,7 @@ export function SecretariatGeneralTeachers() {
     // Simulate sending email
     toast.success(`Enseignant ajouté. Un email d'invitation a été envoyé à ${form.email}`)
 
-    setForm({ first_name: "", family_name: "", last_name: "", description: "", email: "", phone: "", facultyId: "", title: titles[0] ?? "Professeur" })
+    setForm({ first_name: "", middle_name: "", last_name: "", description: "", email: "", phone: "", faculty_id: "", title: titles[0] ?? "Professeur" })
     setOpen(false)
   }
 
@@ -86,7 +86,7 @@ export function SecretariatGeneralTeachers() {
       header: "Enseignant",
       render: (t) => (
         <div className="min-w-0">
-          <p className="font-medium text-foreground">{t.first_name} {t.family_name} {t.last_name}</p>
+          <p className="font-medium text-foreground">{t.first_name} {t.middle_name || ""} {t.last_name}</p>
           <p className="font-mono text-xs text-muted-foreground">{t.matricule}</p>
         </div>
       ),
@@ -154,16 +154,16 @@ export function SecretariatGeneralTeachers() {
                 <Label>Nom</Label>
                 <Input
                   placeholder="Nom"
-                  value={form.family_name}
-                  onChange={(e) => setForm((f) => ({ ...f, family_name: e.target.value }))}
+                  value={form.last_name}
+                  onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label>Postnom</Label>
                 <Input
                   placeholder="Postnom"
-                  value={form.last_name}
-                  onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
+                  value={form.middle_name}
+                  onChange={(e) => setForm((f) => ({ ...f, middle_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
@@ -204,8 +204,8 @@ export function SecretariatGeneralTeachers() {
               <div className="space-y-1.5">
                 <Label>Faculté</Label>
                 <Select
-                  value={form.facultyId}
-                  onValueChange={(v) => setForm((f) => ({ ...f, facultyId: v }))}
+                  value={form.faculty_id}
+                  onValueChange={(v) => setForm((f) => ({ ...f, faculty_id: v }))}
                 >
                   <SelectTrigger><SelectValue placeholder="Choisir…" /></SelectTrigger>
                   <SelectContent>
@@ -235,7 +235,7 @@ export function SecretariatGeneralTeachers() {
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
             <Button
               onClick={handleAdd}
-              disabled={!form.first_name.trim() || !form.family_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.facultyId}
+              disabled={!form.first_name.trim() || !form.middle_name.trim() || !form.last_name.trim() || !form.email.trim() || !form.faculty_id}
             >
               Ajouter
             </Button>

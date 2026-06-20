@@ -42,24 +42,24 @@ export function TeacherCourses() {
   const [form, setForm] = useState<ResForm>({ title: "", type: "pdf", url: "" })
 
   const courses = store.courses
-    .filter((c) => c.teacherId === teacher.id)
+    .filter((c) => c.teacher_id === teacher.id)
     .map((c) => ({
       ...c,
-      promotionName: store.promotions.find((p) => p.id === c.promotionId)?.name ?? "—",
-      studentCount:  store.students.filter((s) => s.promotionId === c.promotionId).length,
-      resources:     store.courseResources.filter((r) => r.courseId === c.id),
+      promotionName: store.promotions.find((p) => p.id === c.promotion_id)?.name ?? "—",
+      studentCount:  store.students.filter((s) => s.promotion_id === c.promotion_id).length,
+      resources:     store.courseResources.filter((r) => r.course_id === c.id),
     }))
 
-  function handleAdd(courseId: string) {
+  function handleAdd(course_id: string) {
     if (!form.title.trim() || !form.url.trim()) return
     addCourseResource({
       id:        generateId(),
-      courseId,
-      teacherId: teacher.id,
+      course_id,
+      teacher_id: teacher.id,
       title:     form.title.trim(),
       type:      form.type,
       url:       form.url.trim(),
-      createdAt: new Date().toISOString().slice(0, 10),
+      created_at: new Date().toISOString().slice(0, 10),
     })
     setForm({ title: "", type: "pdf", url: "" })
   }

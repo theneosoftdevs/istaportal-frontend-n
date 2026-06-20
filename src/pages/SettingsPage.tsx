@@ -40,7 +40,7 @@ export function SettingsPage() {
     if (user) {
       setEmail(user.email || "")
     }
-    const phoneVal = student?.phone_number || teacher?.phone_number || (user as any)?.phone_number || user?.phone || ""
+    const phoneVal = student?.phone_number || (teacher as any)?.phone_number || (user as any)?.phone_number || (user as any)?.phone || ""
     setPhone(phoneVal)
   }, [user, student, teacher])
 
@@ -75,8 +75,8 @@ export function SettingsPage() {
         subtitle={i18n.settings.profile_desc}
       />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Informations Professionnelles</CardTitle>
             <CardDescription>
@@ -137,7 +137,7 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>{i18n.settings.profile_settings}</CardTitle>
             <CardDescription>

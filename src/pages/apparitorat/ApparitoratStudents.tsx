@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { Search, FileDown, FileSpreadsheet } from "lucide-react"
+import istaLogo from "@/assets/ista.jpeg"
 import { PageHeader } from "@/components/ui/PageHeader"
 import { DataTable, type Column } from "@/components/ui/DataTable"
 import { StatusBadge } from "@/components/ui/StatusBadge"
@@ -30,7 +31,6 @@ interface StudentRow extends Student {
 export function ApparitoratStudents() {
   const [query, setQuery] = useState("")
   const [faculty, setFaculty] = useState("all")
-  const [promotion, setPromotion] = useState("all")
   const [status, setStatus] = useState("all")
   const [editingStudent, setEditingStudent] = useState<StudentRow | null>(null)
 
@@ -45,25 +45,22 @@ export function ApparitoratStudents() {
     return data.students.filter((s) => {
       const matchQ =
         !q ||
-        [s.first_name, s.family_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
+        [s.first_name, s.middle_name, s.last_name, s.matricule, s.email].join(" ").toLowerCase().includes(q)
       const matchF = faculty === "all" || s.faculty_id === faculty
-      const matchP = promotion === "all" || s.promotion_id === promotion
       const matchS = status === "all" || s.status === status
-      return matchQ && matchF && matchP && matchS
+      return matchQ && matchF && matchS
     })
-  }, [data, query, faculty, promotion, status])
+  }, [data, query, faculty, status])
 
   const exportToPDF = () => {
     const doc = new jsPDF()
-    const promotionName = promotion !== "all"
-      ? data?.promotions.find(p => p.id === promotion)?.name
-      : i18n.apparitorat.list_type_all
+    const promotionName = i18n.apparitorat.list_type_all
     const facultyName = faculty !== "all"
       ? data?.faculties.find(f => f.id === faculty)?.name
       : i18n.apparitorat.all_faculties
 
     const img = new Image()
-    img.src = "/ista.jpeg"
+    img.src = istaLogo
     img.onload = () => {
       doc.addImage(img, "JPEG", 14, 10, 25, 25)
       finalizePDF(doc, promotionName ?? "", facultyName ?? "")
@@ -96,9 +93,8 @@ export function ApparitoratStudents() {
 
     const tableData = filtered.map(s => [
       s.matricule,
-      `${s.first_name} ${s.family_name} ${s.last_name}`,
+      `${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`.replace(/\s+/g, ' ').trim(),
       s.facultyCode,
-      s.promotionName,
       s.phone_number || "",
       s.status
     ])
@@ -109,7 +105,6 @@ export function ApparitoratStudents() {
         i18n.apparitorat.matricule,
         i18n.apparitorat.student_label,
         i18n.apparitorat.faculty,
-        i18n.apparitorat.promotion,
         i18n.apparitorat.phone_label,
         i18n.apparitorat.status
       ]],
@@ -121,9 +116,7 @@ export function ApparitoratStudents() {
   }
 
   const exportToExcel = async () => {
-    const promotionName = promotion !== "all"
-      ? data?.promotions.find(p => p.id === promotion)?.name
-      : i18n.apparitorat.list_type_all
+    const promotionName = i18n.apparitorat.list_type_all
     const facultyName = faculty !== "all"
       ? data?.faculties.find(f => f.id === faculty)?.name
       : i18n.apparitorat.all_faculties
@@ -161,7 +154,7 @@ export function ApparitoratStudents() {
     filtered.forEach(s => {
       worksheet.addRow([
         s.matricule,
-        `${s.first_name} ${s.family_name} ${s.last_name}`,
+        `${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`.replace(/\s+/g, ' ').trim(),
         s.facultyCode,
         s.promotionName,
         s.phone_number || "",
@@ -196,7 +189,7 @@ export function ApparitoratStudents() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {s.first_name} {s.family_name} {s.last_name}
+            {`${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`.replace(/\s+/g, ' ').trim()}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
@@ -204,14 +197,14 @@ export function ApparitoratStudents() {
     },
     { key: "phone", header: i18n.apparitorat.phone_label, render: (s) => s.phone_number || "—" },
     { key: "faculty", header: i18n.apparitorat.faculty, render: (s) => s.facultyCode },
-    { key: "promotion", header: i18n.apparitorat.promotion, render: (s) => s.promotionName },
+,
     {
       key: "status",
-      header: i18n.apparitorat.status,
+      header: "Statut",
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
-          <StatusBadge status={s.status} />
+          <StatusBadge status={s.status || "active"} />
         </div>
       ),
     },
@@ -271,21 +264,6 @@ export function ApparitoratStudents() {
             {data?.faculties.map((f) => (
               <SelectItem key={f.id} value={f.id}>
                 {f.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={promotion} onValueChange={setPromotion}>
-          <SelectTrigger className="flex-1 sm:w-48 sm:flex-none">
-            <SelectValue placeholder={i18n.apparitorat.promotion} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{i18n.apparitorat.all_promotions}</SelectItem>
-            {data?.promotions
-              .filter(p => faculty === "all" || p.faculty_id === faculty)
-              .map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -34,7 +34,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
   const [body, setBody] = useState("")
   const [priority, setPriority] = useState<"info" | "important" | "urgent">("info")
   const [scope, setScope] = useState<"global" | "faculty" | "course">("global")
-  const [targetId, setTargetId] = useState("")
+  const [target_id, setTargetId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
   const teacher = roleName === "teacher" ? data?.teachers.find(t => t.user_id === user?.id) : null
@@ -56,7 +56,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
       audience: (scope === "global" ? "all" : "student") as any,
       priority,
       scope,
-      targetId: scope === "global" ? undefined : targetId,
+      target_id: scope === "global" ? undefined : target_id,
     }
 
     setTimeout(() => {
@@ -119,7 +119,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
           {scope === "faculty" && data && (
             <div className="space-y-2">
               <Label>{i18n.announcement_dialog.label_faculty}</Label>
-              <Select value={targetId} onValueChange={setTargetId}>
+              <Select value={target_id} onValueChange={setTargetId}>
                 <SelectTrigger>
                   <SelectValue placeholder={i18n.announcement_dialog.placeholder_faculty} />
                 </SelectTrigger>
@@ -135,7 +135,7 @@ export function AnnouncementDialog({ open, onOpenChange }: AnnouncementDialogPro
           {scope === "course" && data && (
             <div className="space-y-2">
               <Label>{i18n.announcement_dialog.label_course}</Label>
-              <Select value={targetId} onValueChange={setTargetId}>
+              <Select value={target_id} onValueChange={setTargetId}>
                 <SelectTrigger>
                   <SelectValue placeholder={i18n.announcement_dialog.placeholder_course} />
                 </SelectTrigger>

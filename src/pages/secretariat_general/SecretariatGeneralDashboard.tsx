@@ -98,8 +98,8 @@ export function SecretariatGeneralDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>{i18n.secretariat_general.faculty_distribution}</CardTitle>
             <CardDescription>{i18n.secretariat_general.faculty_dist_desc}</CardDescription>

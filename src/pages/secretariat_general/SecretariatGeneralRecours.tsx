@@ -49,12 +49,12 @@ export function SecretariatGeneralRecours() {
   const [response, setResponse] = useState("")
 
   const appeals: AppealRow[] = store.gradeAppeals.map((a) => {
-    const student = store.students.find((s) => s.id === a.studentId)
-    const course = store.courses.find((c) => c.id === a.courseId)
-    const grade = store.grades.find((g) => g.id === a.gradeId)
+    const student = store.students.find((s) => s.id === a.student_id)
+    const course = store.courses.find((c) => c.id === a.course_id)
+    const grade = store.grades.find((g) => g.id === a.grade_id)
     return {
       ...a,
-      studentName: student ? `${student.first_name} ${student.family_name} ${student.last_name}` : a.studentId,
+      studentName: student ? `${student.first_name} ${student.middle_name} ${student.last_name}` : a.student_id,
       courseName: course?.name ?? "Cours",
       currentScore: grade?.score ?? 0,
     }
@@ -139,7 +139,7 @@ export function SecretariatGeneralRecours() {
                     <CardTitle className="text-sm font-semibold">{a.studentName}</CardTitle>
                     <CardDescription>
                       {a.courseName} · Note : {a.currentScore}/20 ·{" "}
-                      {new Date(a.createdAt).toLocaleDateString("fr-FR")}
+                      {new Date(a.created_at).toLocaleDateString("fr-FR")}
                     </CardDescription>
                   </div>
                   <Badge

@@ -57,8 +57,8 @@ export function RectoratStats() {
     const byFaculty = d.faculties.map((f) => ({
       name: f.code,
       fullName: f.name,
-      étudiants: d.students.filter((s) => s.facultyId === f.id).length,
-      cours: d.courses.filter((c) => c.facultyId === f.id).length,
+      étudiants: d.students.filter((s) => s.faculty_id === f.id).length,
+      cours: d.courses.filter((c) => c.faculty_id === f.id).length,
     }))
 
     return {
@@ -113,7 +113,7 @@ export function RectoratStats() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Distribution des notes</CardTitle>

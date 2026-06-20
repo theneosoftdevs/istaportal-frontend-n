@@ -42,7 +42,7 @@ export function StudentSelect({
   }, [store.students, value])
 
   const label = selectedStudent 
-    ? `${selectedStudent.first_name || selectedStudent.user?.first_name} ${selectedStudent.family_name || selectedStudent.user?.last_name} (${selectedStudent.matricule})`
+    ? `${selectedStudent.first_name || selectedStudent.user?.first_name} ${selectedStudent.middle_name || selectedStudent.user?.middle_name || ""} ${selectedStudent.last_name || selectedStudent.user?.last_name || ""}`.replace(/\s+/g, ' ').trim() + ` (${selectedStudent.matricule})`
     : placeholder
 
   return (
@@ -69,7 +69,7 @@ export function StudentSelect({
             <CommandEmpty>Aucun étudiant trouvé.</CommandEmpty>
             <CommandGroup>
               {store.students.map((student) => {
-                const name = `${student.first_name || student.user?.first_name} ${student.family_name || student.user?.last_name}`
+                const name = `${student.first_name || student.user?.first_name} ${student.middle_name || student.user?.middle_name || ""} ${student.last_name || student.user?.last_name || ""}`.replace(/\s+/g, ' ').trim()
                 return (
                   <CommandItem
                     key={student.id}

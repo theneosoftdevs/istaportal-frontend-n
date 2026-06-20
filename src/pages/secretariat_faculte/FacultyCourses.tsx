@@ -40,7 +40,7 @@ interface CourseRow extends Course {
 export function FacultyCourses() {
   const store = useStore()
   const { user } = useAuth()
-  const facultyId = user?.facultyId || "f1"
+  const faculty_id = user?.faculty_id || "f1"
 
   const [promotionFilter, setPromotionFilter] = useState("all")
   const [assignTeacherTarget, setAssignTeacherTarget] = useState<CourseRow | null>(null)
@@ -49,14 +49,14 @@ export function FacultyCourses() {
   const [selectedRoomId, setSelectedRoomId] = useState("")
   const [selectedDay, setSelectedDay] = useState<ScheduleSlot["day"]>("Lundi")
   const [timeSlot, setTimeSlot] = useState<"matin" | "apres_midi" | "journee">("matin")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+  const [start_date, setStartDate] = useState("")
+  const [end_date, setEndDate] = useState("")
 
   const rows: CourseRow[] = store.courses.map(c => enrichCourse(store, c))
 
   const filtered = rows.filter((r) => {
-    const isSameFaculty = r.facultyId === facultyId
-    const isSamePromotion = promotionFilter === "all" || r.promotionId === promotionFilter
+    const isSameFaculty = r.faculty_id === faculty_id
+    const isSamePromotion = promotionFilter === "all" || r.promotion_id === promotionFilter
     return isSameFaculty && isSamePromotion
   })
 
@@ -64,7 +64,7 @@ export function FacultyCourses() {
   const totalCredits = filtered.reduce((acc, r) => acc + r.credits, 0)
 
   const teachersForDialog = assignTeacherTarget
-    ? store.teachers.filter((t) => t.facultyId === assignTeacherTarget.facultyId)
+    ? store.teachers.filter((t) => t.faculty_id === assignTeacherTarget.faculty_id)
     : []
 
   function handleAssignTeacher() {
@@ -76,7 +76,7 @@ export function FacultyCourses() {
   }
 
   function handleAddSlot() {
-    if (!manageSlotsTarget || !selectedRoomId || !startDate || !endDate) {
+    if (!manageSlotsTarget || !selectedRoomId || !start_date || !end_date) {
       toast.error("Veuillez remplir tous les champs")
       return
     }
@@ -86,15 +86,15 @@ export function FacultyCourses() {
 
     try {
       addScheduleSlot({
-        courseId: manageSlotsTarget.id,
-        promotionId: manageSlotsTarget.promotionId,
-        teacherId: manageSlotsTarget.teacherId,
+        course_id: manageSlotsTarget.id,
+        promotion_id: manageSlotsTarget.promotion_id,
+        teacher_id: manageSlotsTarget.teacher_id,
         day: selectedDay,
         start,
         end,
         room: selectedRoomId,
-        startDate,
-        endDate
+        start_date,
+        end_date
       })
 
       toast.success("Horaire ajouté avec succès")
@@ -150,7 +150,7 @@ export function FacultyCourses() {
             className="h-7 shrink-0 gap-1 text-xs"
             onClick={() => {
               setAssignTeacherTarget(c)
-              setSelectedTeacherId(c.teacherId)
+              setSelectedTeacherId(c.teacher_id)
             }}
           >
             <UserCheck className="size-3.5" />
@@ -214,7 +214,7 @@ export function FacultyCourses() {
     },
   ]
 
-  const promotions = store.promotions.filter(p => p.facultyId === facultyId)
+  const promotions = store.promotions.filter(p => p.faculty_id === faculty_id)
 
   return (
     <>
@@ -288,7 +288,7 @@ export function FacultyCourses() {
                   <SelectContent>
                     {teachersForDialog.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
-                        {t.first_name} {t.family_name} {t.last_name}
+                        {t.first_name} {t.middle_name} {t.last_name}
                         <span className="ml-1 text-muted-foreground">({t.title})</span>
                       </SelectItem>
                     ))}
@@ -306,7 +306,7 @@ export function FacultyCourses() {
             </Button>
             <Button
               onClick={handleAssignTeacher}
-              disabled={!selectedTeacherId || selectedTeacherId === assignTeacherTarget?.teacherId}
+              disabled={!selectedTeacherId || selectedTeacherId === assignTeacherTarget?.teacher_id}
             >
               Attribuer
             </Button>
@@ -342,7 +342,7 @@ export function FacultyCourses() {
                       <div key={s.id} className="flex items-center justify-between p-2 text-xs">
                         <div>
                           <p className="font-medium uppercase">{s.day} {s.start}-{s.end}</p>
-                          <p className="text-muted-foreground">{store.rooms.find(r => r.id === s.room)?.name || s.room} · {s.startDate} au {s.endDate}</p>
+                          <p className="text-muted-foreground">{store.rooms.find(r => r.id === s.room)?.name || s.room} · {s.start_date} au {s.end_date}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -403,11 +403,11 @@ export function FacultyCourses() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[10px] uppercase">Du</Label>
-                    <Input type="date" className="h-8 text-xs" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    <Input type="date" className="h-8 text-xs" value={start_date} onChange={(e) => setStartDate(e.target.value)} />
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-[10px] uppercase">Au</Label>
-                    <Input type="date" className="h-8 text-xs" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <Input type="date" className="h-8 text-xs" value={end_date} onChange={(e) => setEndDate(e.target.value)} />
                   </div>
                 </div>
                 <Button size="sm" className="w-full h-8 text-xs font-bold uppercase tracking-widest" onClick={handleAddSlot}>
