@@ -44,7 +44,7 @@ export interface Promotion {
   name: string
   code: string
   faculty_id: string
-  level?: string
+  level?: number | string
 }
 
 export interface Student {
@@ -120,25 +120,77 @@ export interface ScheduleSlot {
   id: string
   course_id: string
   promotion_id: string
-  teacher_id: string
+  teacher_id?: string
+  salle_id?: string
   day: "Lundi" | "Mardi" | "Mercredi" | "Jeudi" | "Vendredi" | "Samedi"
-  start: string
-  end: string
-  room: string
+  start?: string
+  end?: string
+  start_time?: string
+  end_time?: string
+  room?: string
+  salle?: Room
   start_date?: string
   end_date?: string
 }
 
+export type EvaluationType = "interrogation" | "tp" | "examen"
+
+export interface Evaluation {
+  id: string
+  course_id: string
+  history_ref_id: string
+  title: string
+  type: EvaluationType
+  max_score: number
+  weight: number
+}
+
 export interface Grade {
   id: string
+  evaluation_id?: string
   student_id: string
-  course_id: string
-  promotion_id: string
-  score: number
-  status: "validated" | "pending" | "rejected"
-  session: string
-  type: "TD" | "TP" | "Interro" | "Examen"
+  score_obtained?: number
+  is_published?: boolean
+  observation?: string
+  course_id?: string
+  promotion_id?: string
+  score?: number
+  status?: "validated" | "pending" | "rejected"
+  session?: string
+  type?: "TD" | "TP" | "Interro" | "Examen"
   assessment_title?: string
+}
+
+export interface StudentAnnualAverage {
+  student_id: string
+  student_name: string
+  promotion_code: string
+  academic_year: string
+  general_average_s1: number
+  general_average_s2: number
+  general_average_annual: number
+  semester_1_units: UnitAverage[]
+  semester_2_units: UnitAverage[]
+  total_capitalized_credits: number
+}
+
+export interface UnitAverage {
+  unit_id: string
+  unit_code: string
+  unit_name: string
+  semester: number
+  unit_average: number
+  capitalized_credits: number
+  course_averages: CourseAverage[]
+}
+
+export interface CourseAverage {
+  course_id: string
+  course_code: string
+  course_name: string
+  average: number
+  credits: number
+  is_capitalized: boolean
 }
 
 export interface Announcement {
@@ -244,4 +296,3 @@ export interface PortalInfo {
   label: string
   description: string
 }
-

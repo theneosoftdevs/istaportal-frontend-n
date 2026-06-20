@@ -16,10 +16,11 @@ export const ENDPOINTS = {
 
 export interface StudentProfilePayload {
   user_id: string;
-  promotion_id: string;
   faculty_id: string;
   birth_date: string;
   phone_number: string;
+  academic_year_id?: string;
+  promotion_id?: string;
 }
 
 export const studentApi = {
@@ -77,5 +78,5 @@ export const teacherApi = {
 // Simple user API for updating core user fields when backend exposes /users/:id
 export const userApi = {
   get: (id: string) => api.get(`/users/${id}`),
-  update: (id: string, body: unknown) => api.put(`/users/${id}`, body),
+  update: (id: string, body: unknown) => api.patch(`/users/${id}`, body),
 }

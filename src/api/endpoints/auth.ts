@@ -1,5 +1,5 @@
 import { api } from "../client"
-import type { User } from "@/types"
+import type { RoleName, User } from "@/types"
 
 export const ENDPOINTS = {
   login:          "/auth/login",
@@ -19,7 +19,7 @@ export interface RegisterPayload {
   gender: "M" | "F";
   email: string;
   password?: string;
-  role_id: number;
+  role?: RoleName;
 }
 export interface RegisterResponse {
   user_id?: string;
@@ -27,7 +27,15 @@ export interface RegisterResponse {
   message?: string;
   [key: string]: any;
 }
-export type LoginResponse = User
+export interface LoginResponse extends Partial<User> {
+  token?: string;
+  token_type?: "Bearer" | string;
+  session_id?: string;
+  user_id?: string;
+  role?: User["role"] | RoleName;
+  user?: User;
+  data?: { token?: string; user?: User };
+}
 export type MeResponse = User
 
 export const authApi = {

@@ -9,47 +9,49 @@ const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api"
 export const ENDPOINTS = {
   auth: {
     login:          "/auth/login",
-    me:             "/auth/me",
+    me:             "/me/profile",
     logout:         "/auth/logout",
     forgotPassword: "/auth/forgot-password",
     resetPassword:  "/auth/reset-password",
     activate:       "/auth/activate",
   },
   faculties: {
-    base:   "/faculties",
-    detail: (id: string) => `/faculties/${id}`,
+    base:   "/academics/faculties",
+    detail: (id: string) => `/academics/faculties/${id}`,
   },
   promotions: {
-    base:   "/promotions",
-    detail: (id: string) => `/promotions/${id}`,
+    base:   "/academics/promotions",
+    detail: (id: string) => `/academics/promotions/${id}`,
   },
   courses: {
-    base:    "/courses",
-    detail:  (id: string) => `/courses/${id}`,
-    teacher: (id: string) => `/courses/${id}/teacher`,
+    base:    "/academics/courses",
+    detail:  (id: string) => `/academics/courses/${id}`,
+    teacher: (id: string) => `/academics/courses/${id}/teacher`,
   },
   schedules: {
-    base:   "/schedules",
-    detail: (id: string) => `/schedules/${id}`,
+    base:   "/academics/schedules",
+    detail: (id: string) => `/academics/schedules/${id}`,
   },
   rooms: {
-    base:   "/rooms",
-    detail: (id: string) => `/rooms/${id}`,
+    base:   "/academics/salles",
+    detail: (id: string) => `/academics/salles/${id}`,
   },
   students: {
-    base:   "/students",
-    detail: (id: string) => `/students/${id}`,
-    status: (id: string) => `/students/${id}/status`,
+    base:   "/profiles/students",
+    detail: (id: string) => `/profiles/students/${id}`,
+    status: (id: string) => `/profiles/students/${id}/status`,
   },
   teachers: {
-    base:   "/teachers",
-    detail: (id: string) => `/teachers/${id}`,
-    titles: "/teachers/titles",
+    base:   "/profiles/teachers",
+    detail: (id: string) => `/profiles/teachers/${id}`,
+    titles: "/profiles/teachers/titles",
   },
   grades: {
-    base:   "/grades",
-    detail: (id: string) => `/grades/${id}`,
-    status: (id: string) => `/grades/${id}/status`,
+    base:   "/academics/grades",
+    detail: (id: string) => `/academics/grades/${id}`,
+    status: (id: string) => `/academics/grades/${id}`,
+    byEvaluation: (id: string) => `/academics/grades/evaluations/${id}`,
+    publish: "/academics/grades/publish",
   },
   appeals: {
     base:    "/appeals",
@@ -71,9 +73,9 @@ export const ENDPOINTS = {
     base: "/announcements",
   },
   notifications: {
-    base:    "/notifications",
-    read:    (id: string) => `/notifications/${id}/read`,
-    readAll: "/notifications/read-all",
+    base:    "/me/notifications",
+    read:    (id: string) => `/me/notifications/${id}/read`,
+    readAll: "/me/notifications/read-all",
   },
 } as const
 

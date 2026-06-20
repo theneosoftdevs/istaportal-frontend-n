@@ -110,7 +110,7 @@ export function InscriptionDialog({ onSuccess }: InscriptionDialogProps) {
         last_name: form.last_name.trim(),
         gender: form.gender as "M" | "F",
         email: form.email.trim(),
-        role_id: 7, // Role student
+        role: "student",
       })
 
       const userId = authRes?.user_id || authRes?.id
