@@ -8,7 +8,11 @@ import type {
   Grade,
   Evaluation,
   StudentAnnualAverage,
-  AcademicYear
+  AcademicYear,
+  GradeAppeal,
+  Assignment,
+  Submission,
+  CourseResource
 } from "@/types"
 
 export const ENDPOINTS = {
@@ -51,6 +55,22 @@ export const ENDPOINTS = {
     base: "/academics/academic-years",
     active: "/academics/academic-years/active",
     activate: (id: string) => `/academics/academic-years/${id}/activate`,
+  },
+  appeals: {
+    base: "/appeals",
+    resolve: (id: string) => `/appeals/${id}/resolve`
+  },
+  assignments: {
+    base: "/assignments",
+    detail: (id: string) => `/assignments/${id}`
+  },
+  submissions: {
+    base: "/submissions",
+    grade: (id: string) => `/submissions/${id}/grade`
+  },
+  resources: {
+    base: "/resources",
+    detail: (id: string) => `/resources/${id}`
   },
 }
 
@@ -131,4 +151,42 @@ export const academicYearApi = {
   list: () => api.get<AcademicYear[]>(ENDPOINTS.academicYears.base),
   active: () => api.get<AcademicYear>(ENDPOINTS.academicYears.active),
   activate: (id: string) => api.post<void>(ENDPOINTS.academicYears.activate(id), {}),
+}
+
+export const appealApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    return api.get<GradeAppeal[]>(`${ENDPOINTS.appeals.base}${qs}`)
+  },
+  create: (body: unknown) => api.post<GradeAppeal>(ENDPOINTS.appeals.base, body),
+  resolve: (id: string, status: "approved" | "rejected", response: string) =>
+    api.patch<GradeAppeal>(ENDPOINTS.appeals.resolve(id), { status, response }),
+}
+
+export const assignmentApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    return api.get<Assignment[]>(`${ENDPOINTS.assignments.base}${qs}`)
+  },
+  create: (body: unknown) => api.post<Assignment>(ENDPOINTS.assignments.base, body),
+  delete: (id: string) => api.delete<void>(ENDPOINTS.assignments.detail(id)),
+}
+
+export const submissionApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    return api.get<Submission[]>(`${ENDPOINTS.submissions.base}${qs}`)
+  },
+  create: (body: unknown) => api.post<Submission>(ENDPOINTS.submissions.base, body),
+  grade: (id: string, grade: number, feedback: string) =>
+    api.patch<Submission>(ENDPOINTS.submissions.grade(id), { grade, feedback }),
+}
+
+export const resourceApi = {
+  list: (params?: Record<string, string>) => {
+    const qs = params ? "?" + new URLSearchParams(params).toString() : ""
+    return api.get<CourseResource[]>(`${ENDPOINTS.resources.base}${qs}`)
+  },
+  create: (body: unknown) => api.post<CourseResource>(ENDPOINTS.resources.base, body),
+  delete: (id: string) => api.delete<void>(ENDPOINTS.resources.detail(id)),
 }
