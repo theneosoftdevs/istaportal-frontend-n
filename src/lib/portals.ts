@@ -20,8 +20,8 @@ import {
   AlertCircle,
   BookMarked,
   type LucideIcon,
-} from "lucide-react"
-import type { RoleName, PortalInfo } from "@/types"
+} from "lucide-react";
+import type { RoleName, PortalInfo } from "@/types";
 
 export const PORTALS: (PortalInfo & { icon: LucideIcon; color: string })[] = [
   {
@@ -73,64 +73,73 @@ export const PORTALS: (PortalInfo & { icon: LucideIcon; color: string })[] = [
     icon: ShieldCheck,
     color: "text-primary",
   },
-]
+];
 
 export function getPortal(role: RoleName) {
-  return PORTALS.find((p) => p.role === role)
+  return PORTALS.find((p) => p.role === role);
 }
 
 export interface NavItem {
-  label: string
-  to: string
-  icon: LucideIcon
+  label: string;
+  to: string;
+  icon: LucideIcon;
 }
 
 export const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   student: [
-    { label: "Accueil",      to: "/student/dashboard",    icon: Home },
-    { label: "Horaire",      to: "/student/schedule",     icon: CalendarDays },
-    { label: "Travaux",      to: "/student/assignments",  icon: ClipboardCheck },
-    { label: "Notes",        to: "/student/grades",       icon: FileText },
-    { label: "Ressources",   to: "/student/resources",    icon: FolderOpen },
+    { label: "Accueil", to: "/student/dashboard", icon: Home },
+    { label: "Horaire", to: "/student/schedule", icon: CalendarDays },
+    { label: "Travaux", to: "/student/assignments", icon: ClipboardCheck },
+    { label: "Notes", to: "/student/grades", icon: FileText },
+    { label: "Ressources", to: "/student/resources", icon: FolderOpen },
   ],
   teacher: [
-    { label: "Accueil",      to: "/teacher/dashboard",   icon: Home },
-    { label: "Cours",        to: "/teacher/courses",     icon: BookOpen },
-    { label: "Travaux",      to: "/teacher/assignments", icon: ClipboardCheck },
-    { label: "Notes",        to: "/teacher/grades",      icon: FileText },
-    { label: "Horaire",      to: "/teacher/schedule",    icon: CalendarDays },
+    { label: "Accueil", to: "/teacher/dashboard", icon: Home },
+    { label: "Cours", to: "/teacher/courses", icon: BookOpen },
+    { label: "Travaux", to: "/teacher/assignments", icon: ClipboardCheck },
+    { label: "Notes", to: "/teacher/grades", icon: FileText },
+    { label: "Horaire", to: "/teacher/schedule", icon: CalendarDays },
   ],
   apparitorat: [
-    { label: "Accueil",      to: "/apparitorat/dashboard",    icon: Home },
+    { label: "Accueil", to: "/apparitorat/dashboard", icon: Home },
     { label: "Inscriptions", to: "/apparitorat/inscriptions", icon: UserPlus },
-    { label: "Étudiants",    to: "/apparitorat/students",     icon: Users },
-    { label: "Locaux",       to: "/apparitorat/rooms",        icon: DoorOpen },
+    { label: "Étudiants", to: "/apparitorat/students", icon: Users },
+    { label: "Années", to: "/apparitorat/annees", icon: CalendarDays },
+    { label: "Locaux", to: "/apparitorat/rooms", icon: DoorOpen },
   ],
   section: [
-    { label: "Accueil",      to: "/secretariat_faculte/dashboard",  icon: Home },
-    { label: "Cours",        to: "/secretariat_faculte/courses",    icon: BookOpen },
+    { label: "Accueil", to: "/secretariat_faculte/dashboard", icon: Home },
+    { label: "Cours", to: "/secretariat_faculte/courses", icon: BookOpen },
   ],
   secretariat_faculte: [
-    { label: "Accueil",      to: "/secretariat_faculte/dashboard",  icon: Home },
-    { label: "Promotions",   to: "/secretariat_faculte/promotions", icon: Users },
-    { label: "Cours",        to: "/secretariat_faculte/courses",    icon: BookOpen },
-    { label: "Recours",      to: "/secretariat_faculte/recours",    icon: AlertCircle },
+    { label: "Accueil", to: "/secretariat_faculte/dashboard", icon: Home },
+    { label: "Promotions", to: "/secretariat_faculte/promotions", icon: Users },
+    { label: "Cours", to: "/secretariat_faculte/courses", icon: BookOpen },
+    { label: "Recours", to: "/secretariat_faculte/recours", icon: AlertCircle },
   ],
   secretariat_general: [
-    { label: "Accueil",      to: "/secretariat_general/dashboard", icon: Home },
-    { label: "Entités",      to: "/secretariat_general/entities",  icon: Building2 },
-    { label: "Étudiants",    to: "/secretariat_general/students",  icon: Users },
-    { label: "Enseignants",  to: "/secretariat_general/teachers",  icon: UserSquare2 },
-    { label: "Résultats",    to: "/secretariat_general/results",   icon: FileText },
-    { label: "Recours",      to: "/secretariat_general/recours",   icon: AlertCircle },
-    { label: "Académique",   to: "/secretariat_general/academic",  icon: BarChart3 },
+    { label: "Accueil", to: "/secretariat_general/dashboard", icon: Home },
+    { label: "Entités", to: "/secretariat_general/entities", icon: Building2 },
+    { label: "Étudiants", to: "/secretariat_general/students", icon: Users },
+    {
+      label: "Enseignants",
+      to: "/secretariat_general/teachers",
+      icon: UserSquare2,
+    },
+    { label: "Résultats", to: "/secretariat_general/results", icon: FileText },
+    { label: "Recours", to: "/secretariat_general/recours", icon: AlertCircle },
+    {
+      label: "Académique",
+      to: "/secretariat_general/academic",
+      icon: BarChart3,
+    },
   ],
   rectorat: [
-    { label: "Accueil",      to: "/rectorat/dashboard", icon: Home },
-    { label: "Stats",        to: "/rectorat/stats",     icon: BarChart3 },
-    { label: "Facultés",     to: "/rectorat/faculties", icon: Building2 },
-    { label: "Résultats",    to: "/rectorat/results",   icon: FileText },
-    { label: "Recours",      to: "/rectorat/recours",   icon: AlertCircle },
-    { label: "Académique",   to: "/rectorat/academic",  icon: BookMarked },
+    { label: "Accueil", to: "/rectorat/dashboard", icon: Home },
+    { label: "Stats", to: "/rectorat/stats", icon: BarChart3 },
+    { label: "Facultés", to: "/rectorat/faculties", icon: Building2 },
+    { label: "Résultats", to: "/rectorat/results", icon: FileText },
+    { label: "Recours", to: "/rectorat/recours", icon: AlertCircle },
+    { label: "Académique", to: "/rectorat/academic", icon: BookMarked },
   ],
-}
+};

@@ -208,6 +208,7 @@ export const scheduleApi = {
 export const roomApi = {
   list:   ()              => api.get<import("@/types").Room[]>(ENDPOINTS.rooms.base),
   create: (body: unknown) => api.post<import("@/types").Room>(ENDPOINTS.rooms.base, body),
+  update: (id: string, body: unknown) => api.put<import("@/types").Room>(ENDPOINTS.rooms.detail(id), body),
   delete: (id: string)    => api.delete<void>(ENDPOINTS.rooms.detail(id)),
 }
 

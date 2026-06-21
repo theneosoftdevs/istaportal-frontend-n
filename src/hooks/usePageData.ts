@@ -1,7 +1,8 @@
 import { 
   useFaculties, usePromotions, useStudents, useTeachers, useCourses, 
   useSchedules, useRooms, useGrades, useAppeals, useAssignments, 
-  useSubmissions, useResources, useAnnouncements, useNotifications
+  useSubmissions, useResources, useAnnouncements, useNotifications,
+  useAcademicYears
 } from "./api"
 
 import type { AppData, Promotion } from "@/types"
@@ -25,6 +26,7 @@ export function useStore(): AppData {
   const resourcesData = useResources().data || []
   const announcementsData = useAnnouncements().data || []
   const notificationsData = useNotifications().data || []
+  const academicYearsData = useAcademicYears().data || []
 
   // Ensure promotions have a code if missing (for legacy or partial data)
   const promotions: Promotion[] = promotionsData.map(p => ({
@@ -48,6 +50,7 @@ export function useStore(): AppData {
     courseResources: resourcesData, 
     announcements: announcementsData, 
     notifications: notificationsData,
+    academicYears: academicYearsData,
     users: [],
     teacherTitles: ["Professeur", "Professeure", "Assistant", "Assistante", "Chef de Travaux", "Maître de Conférences"]
   }

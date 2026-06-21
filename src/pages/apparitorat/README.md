@@ -6,4 +6,5 @@ Gestion administrative des inscriptions et des locaux.
 - **Inscriptions** : Formulaire complet (3 noms, date de naissance) avec envoi d'email automatique.
 - **Suivi Étudiant** : Liste filtrable par faculté et promotion.
 - **Locaux** : Gestion des salles et planning d'occupation en temps réel.
+- **Années académiques** : Création des années et historique du parcours étudiant par année.
 - **Statistiques** : Tableau de bord des effectifs et répartition par genre.

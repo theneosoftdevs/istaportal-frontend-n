@@ -1,16 +1,17 @@
-import { api } from "../client"
-import type { RoleName, User, Notification } from "@/types"
+import { api } from "../client";
+import type { RoleName, User, Notification } from "@/types";
 
 export const ENDPOINTS = {
-  login:          "/auth/login",
-  register:       "/auth/register",
-  logout:         "/auth/logout",
-  profile:        "/me/profile",
-  sessions:       "/me/sessions",
-  logoutAll:      "/me/sessions/logout-all",
-  notifications:  "/me/notifications",
+  login: "/auth/login",
+  register: "/auth/register",
+  logout: "/auth/logout",
+  forgotPassword: "/auth/forgot-password",
+  profile: "/me/profile",
+  sessions: "/me/sessions",
+  logoutAll: "/me/sessions/logout-all",
+  notifications: "/me/notifications",
   readNotification: (id: string) => `/me/notifications/${id}/read`,
-}
+};
 
 export interface LoginPayload {
   email: string;
@@ -31,7 +32,13 @@ export interface RegisterPayload {
   gender: "M" | "F";
   email: string;
   password?: string;
-  role: RoleName;
+  role?: RoleName;
+}
+
+export interface RegisterResponse {
+  id?: string;
+  user_id?: string;
+  email?: string;
 }
 
 export interface Session {
@@ -45,23 +52,26 @@ export const authApi = {
     api.post<LoginResponse>(ENDPOINTS.login, payload),
 
   register: (payload: RegisterPayload) =>
-    api.post<any>(ENDPOINTS.register, payload),
+    api.post<RegisterResponse>(ENDPOINTS.register, payload),
 
-  logout: () =>
-    api.post<void>(ENDPOINTS.logout, {}),
+  logout: () => api.post<void>(ENDPOINTS.logout, {}),
 
-  me: () =>
-    api.get<User>(ENDPOINTS.profile),
+  forgotPassword: (email: string) =>
+    api.post<void>(ENDPOINTS.forgotPassword, { email }),
 
-  sessions: () =>
-    api.get<Session[]>(ENDPOINTS.sessions),
+  me: () => api.get<User>(ENDPOINTS.profile),
 
-  logoutAllSessions: () =>
-    api.post<void>(ENDPOINTS.logoutAll, {}),
+  sessions: () => api.get<Session[]>(ENDPOINTS.sessions),
+
+  logoutAllSessions: () => api.post<void>(ENDPOINTS.logoutAll, {}),
 
   notifications: (unreadOnly = false) =>
-    api.get<Notification[]>(unreadOnly ? `${ENDPOINTS.notifications}?unread=true` : ENDPOINTS.notifications),
+    api.get<Notification[]>(
+      unreadOnly
+        ? `${ENDPOINTS.notifications}?unread=true`
+        : ENDPOINTS.notifications,
+    ),
 
   readNotification: (id: string) =>
     api.patch<void>(ENDPOINTS.readNotification(id), {}),
-}
+};

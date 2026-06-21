@@ -1,71 +1,96 @@
 // src/pages/apparitorat/ApparitoratInscriptions.tsx
-import { useMemo, useState } from "react"
-import { Search } from "lucide-react"
-import { PageHeader } from "@/components/ui/PageHeader"
-import { DataTable, type Column } from "@/components/ui/DataTable"
-import { StatusBadge } from "@/components/ui/StatusBadge"
-import { KPICard } from "@/components/ui/KPICard"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { usePageData } from "@/hooks/usePageData"
-import { useStore } from "@/hooks/usePageData"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { InscriptionDialog } from "@/pages/apparitorat/InscriptionDialog"
-import { EditStudentDialog } from "@/pages/apparitorat/EditStudentDialog"
-import { enrichStudent } from "@/lib/selectors"
-import { Users, UserCheck, UserCog } from "lucide-react"
-import type { Student } from "@/types"
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { KPICard } from "@/components/ui/KPICard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { usePageData } from "@/hooks/usePageData";
+import { useStore } from "@/hooks/usePageData";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { InscriptionDialog } from "@/pages/apparitorat/InscriptionDialog";
+import { EditStudentDialog } from "@/pages/apparitorat/EditStudentDialog";
+import { enrichStudent } from "@/lib/selectors";
+import { Users, UserCheck, UserCog } from "lucide-react";
+import type { Student } from "@/types";
+import {
+  isActiveStudentStatus,
+  isPendingStudentStatus,
+} from "@/lib/studentStatus";
 
 export function ApparitoratInscriptions() {
-  const store = useStore()
-  const [query, setQuery] = useState("")
-  const [facultyFilter, setFacultyFilter] = useState("all")
-  const [promotionFilter, setPromotionFilter] = useState("all")
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const store = useStore();
+  const [query, setQuery] = useState("");
+  const [facultyFilter, setFacultyFilter] = useState("all");
+  const [promotionFilter, setPromotionFilter] = useState("all");
+  const [academicYearFilter, setAcademicYearFilter] = useState("all");
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   const { data, loading } = usePageData((d) => {
-    const students = d.students.map(s => enrichStudent(d, s))
-    const facultyName = (id: string) => d.faculties.find((f) => f.id === id)?.code ?? "—"
+    const students = d.students.map((s) => enrichStudent(d, s));
+    const facultyName = (id: string) =>
+      d.faculties.find((f) => f.id === id)?.code ?? "—";
     const promotionName = (id: string) =>
-      d.promotions.find((p) => p.id === id)?.name ?? "—"
+      d.promotions.find((p) => p.id === id)?.name ?? "—";
     return {
       students,
       facultyName,
       promotionName,
-    }
-  })
+    };
+  });
+
+  const resolveAcademicYearId = (s: Student) => {
+    if (s.academic_year_id) return s.academic_year_id;
+    if (s.academic_year?.id) return s.academic_year.id;
+    const current =
+      s.histories?.find((h) => h.status === "en_cours") || s.histories?.[0];
+    return current?.academic_year_id || current?.academic_year?.id || "";
+  };
 
   const filtered = useMemo(() => {
-    if (!data) return []
-    let list = data.students
+    if (!data) return [];
+    let list = data.students;
 
     if (facultyFilter !== "all") {
-      list = list.filter(s => s.faculty_id === facultyFilter)
+      list = list.filter((s) => s.faculty_id === facultyFilter);
     }
     if (promotionFilter !== "all") {
-      list = list.filter(s => s.promotion_id === promotionFilter)
+      list = list.filter((s) => s.promotion_id === promotionFilter);
+    }
+    if (academicYearFilter !== "all") {
+      list = list.filter(
+        (s) => resolveAcademicYearId(s) === academicYearFilter,
+      );
     }
 
-    const q = query.trim().toLowerCase()
+    const q = query.trim().toLowerCase();
     if (q) {
       list = list.filter((s) =>
         [s.first_name, s.middle_name, s.last_name, s.matricule, s.email]
           .join(" ")
           .toLowerCase()
           .includes(q),
-      )
+      );
     }
-    return list
-  }, [data, query, facultyFilter, promotionFilter])
+    return list;
+  }, [data, query, facultyFilter, promotionFilter, academicYearFilter]);
 
   const counts = useMemo(() => {
-    const list = data?.students ?? []
+    const list = data?.students ?? [];
     return {
       total: list.length,
-      active: list.filter((s) => s.status === "active").length,
-      pending: list.filter((s) => s.status === "pending").length,
-    }
-  }, [data])
+      active: list.filter((s) => isActiveStudentStatus(s.status)).length,
+      pending: list.filter((s) => isPendingStudentStatus(s.status)).length,
+    };
+  }, [data]);
 
   const columns: Column<Student>[] = [
     {
@@ -79,7 +104,9 @@ export function ApparitoratInscriptions() {
       render: (s) => (
         <div className="min-w-0">
           <p className="font-medium text-foreground">
-            {`${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`.replace(/\s+/g, ' ').trim()}
+            {`${s.first_name} ${s.middle_name || ""} ${s.last_name || ""}`
+              .replace(/\s+/g, " ")
+              .trim()}
           </p>
           <p className="truncate text-xs text-muted-foreground">{s.email}</p>
         </div>
@@ -104,7 +131,8 @@ export function ApparitoratInscriptions() {
       key: "average",
       header: "Moyenne",
       align: "center",
-      render: (s) => ((s.average || 0) > 0 ? `${(s.average || 0).toFixed(1)}/20` : "—"),
+      render: (s) =>
+        (s.average || 0) > 0 ? `${(s.average || 0).toFixed(1)}/20` : "—",
     },
     {
       key: "status",
@@ -122,13 +150,17 @@ export function ApparitoratInscriptions() {
       align: "right",
       render: (s) => (
         <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={() => setEditingStudent(s)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setEditingStudent(s)}
+          >
             Modifier
           </Button>
         </div>
       ),
     },
-  ]
+  ];
 
   return (
     <>
@@ -143,9 +175,8 @@ export function ApparitoratInscriptions() {
         action={
           <InscriptionDialog
             onSuccess={(s) => {
-              setQuery(s.matricule || "")
-              // Optionally reload after a short delay or if reactive, skip reload
-              setTimeout(() => window.location.reload(), 1500)
+              setQuery(s.matricule || "");
+              setTimeout(() => window.location.reload(), 300);
             }}
           />
         }
@@ -190,7 +221,11 @@ export function ApparitoratInscriptions() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes facultés</SelectItem>
-              {store.faculties.map(f => <SelectItem key={f.id} value={f.id}>{f.code}</SelectItem>)}
+              {store.faculties.map((f) => (
+                <SelectItem key={f.id} value={f.id}>
+                  {f.code}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select value={promotionFilter} onValueChange={setPromotionFilter}>
@@ -199,7 +234,27 @@ export function ApparitoratInscriptions() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes promotions</SelectItem>
-              {store.promotions.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              {store.promotions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={academicYearFilter}
+            onValueChange={setAcademicYearFilter}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Année" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes années</SelectItem>
+              {(store.academicYears || []).map((ay) => (
+                <SelectItem key={ay.id} value={ay.id}>
+                  {ay.display_name || ay.name || "—"}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -214,5 +269,5 @@ export function ApparitoratInscriptions() {
         emptyDescription="Essayez de modifier votre recherche ou inscrivez un nouvel étudiant."
       />
     </>
-  )
+  );
 }

@@ -1,8 +1,10 @@
 // src/types.ts
 
-export type Gender = 'M' | 'F';
-export type EvaluationType = 'interrogation' | 'tp' | 'examen';
-export type SalleType = 'auditoire' | 'labo' | 'salle decoference';
+export type Gender = "M" | "F";
+export type EvaluationType = "interrogation" | "tp" | "examen";
+export type AcademicStatus = "admis" | "redoublant" | "en_cours";
+export type SalleType = "auditoire" | "labo" | "salle decoference";
+export type ResourceType = "pdf" | "syllabus" | "video" | "link" | "doc";
 
 export type RoleName =
   | "student"
@@ -11,11 +13,11 @@ export type RoleName =
   | "secretariat_faculte"
   | "secretariat_general"
   | "rectorat"
-  | "section"
+  | "section";
 
 export interface Role {
-  id: number
-  nom: RoleName
+  id?: number;
+  nom: RoleName;
 }
 
 export interface User {
@@ -25,13 +27,13 @@ export interface User {
   last_name: string;
   gender: Gender;
   email: string;
+  role_id?: number;
   role: Role;
   is_active: boolean;
   created_at: string;
   updated_at?: string;
   faculty_id?: string;
   promotion_id?: string;
-  // UI helper fields
   avatar?: string;
   token?: string;
 }
@@ -40,16 +42,26 @@ export interface Faculty {
   id: string;
   name: string;
   code: string;
+  secretariat_faculte_id?: string;
   secretary?: User;
 }
 
 export interface Promotion {
   id: string;
+  code: string;
   name: string;
   faculty_id: string;
-  level: number;
-  code?: string;
   faculty?: Faculty;
+  level: number;
+}
+
+export interface AcademicYear {
+  id: string;
+  display_name: string;
+  name?: string;
+  is_active: boolean;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface StudentProfile {
@@ -59,55 +71,56 @@ export interface StudentProfile {
   birth_date: string;
   phone_number: string;
   faculty_id: string;
-  promotion_id?: string;
-  academic_year_id?: string;
   faculty?: Faculty;
   user?: User;
+  promotion_id?: string;
+  promotion?: Promotion;
+  academic_year_id?: string;
+  academic_year?: AcademicYear;
 }
 
-// Keeping Student alias for backward compatibility in components
 export type Student = StudentProfile & {
   first_name?: string;
   middle_name?: string;
   last_name?: string;
   gender?: Gender;
   email?: string;
-  promotion?: Promotion;
-  status?: "active" | "suspended" | "excluded" | "pending";
+  status?: "active" | "suspended" | "excluded" | "pending" | string;
   average?: number;
-}
+  histories?: AcademicHistory[];
+  academic_histories?: AcademicHistory[];
+};
 
 export interface TeacherProfile {
   id: string;
   user_id: string;
+  matricule?: string;
   title: string;
   faculty_id: string;
   faculty?: Faculty;
   user?: User;
 }
 
-// Keeping Teacher alias
 export type Teacher = TeacherProfile & {
-  matricule?: string;
   first_name?: string;
   middle_name?: string;
   last_name?: string;
   gender?: Gender;
   email?: string;
   status?: string;
-}
+};
 
 export interface Course {
   id: string;
+  unit_id?: string;
   code: string;
   name: string;
   credits: number;
   promotion_id: string;
   teacher_id?: string;
-  faculty_id?: string;
-  // UI preloads
-  promotion?: Promotion;
   teacher?: Teacher;
+  faculty_id?: string;
+  promotion?: Promotion;
   hours?: number;
 }
 
@@ -116,26 +129,38 @@ export interface Room {
   name: string;
   capacity: number;
   type: SalleType;
+  section?: string;
   description?: string;
 }
 
 export interface ScheduleSlot {
   id: string;
   course_id: string;
+  course?: Course;
+  salle_id?: string;
+  salle?: Room;
   promotion_id: string;
   teacher_id?: string;
-  salle_id?: string;
+  teacher?: Teacher;
   day: "Lundi" | "Mardi" | "Mercredi" | "Jeudi" | "Vendredi" | "Samedi";
   start_time: string;
   end_time: string;
-  // UI helpers for backward compatibility
+  end_day?: string;
   start?: string;
   end?: string;
   start_date?: string;
   end_date?: string;
   room?: string;
-  salle?: Room;
-  course?: Course;
+}
+
+export interface AcademicHistory {
+  id: string;
+  student_id: string;
+  promotion_id: string;
+  promotion?: Promotion;
+  academic_year_id: string;
+  academic_year?: AcademicYear;
+  status: AcademicStatus | string;
 }
 
 export interface Evaluation {
@@ -146,6 +171,8 @@ export interface Evaluation {
   type: EvaluationType;
   max_score: number;
   weight: number;
+  course?: Course;
+  academic_year?: string;
 }
 
 export interface Grade {
@@ -153,9 +180,9 @@ export interface Grade {
   evaluation_id: string;
   student_id: string;
   score_obtained: number;
+  graded_by?: string;
   is_published: boolean;
   observation?: string;
-  // Legacy/UI helpers
   score?: number;
   status?: string;
   type?: string;
@@ -183,7 +210,7 @@ export interface UnitAverage {
   unit_code: string;
   unit_name: string;
   semester: number;
-  unit_average: number; // Moyenne sur 20
+  unit_average: number;
   capitalized_credits: number;
   course_averages: CourseAverage[];
 }
@@ -194,7 +221,7 @@ export interface CourseAverage {
   course_name: string;
   average: number;
   credits: number;
-  is_capitalized: boolean; // Si moyenne >= 10
+  is_capitalized: boolean;
 }
 
 export interface Announcement {
@@ -248,27 +275,29 @@ export interface GradeAppeal {
 export interface CourseResource {
   id: string;
   course_id: string;
-  teacher_id: string;
+  course?: Course;
+  teacher_id?: string;
   title: string;
+  description?: string;
   type: "pdf" | "video" | "link" | "doc";
+  resource_type?: ResourceType;
   url: string;
   created_at: string;
 }
 
 export interface Notification {
-  id: string;
+  id: string | number;
+  user_id?: string;
   type: string;
-  message: string;
-  read: boolean;
+  delivery_format?: "annonce" | "notification";
+  data?: unknown;
+  message?: string;
+  read?: boolean;
+  is_read?: boolean;
+  read_at?: string;
   created_at: string;
   metadata?: Record<string, string>;
   target_role?: Role;
-}
-
-export interface AcademicYear {
-  id: string;
-  name: string;
-  is_active: boolean;
 }
 
 export interface AppData {
@@ -288,7 +317,7 @@ export interface AppData {
   courseResources: CourseResource[];
   notifications: Notification[];
   rooms: Room[];
-  academicYears: AcademicYear[];
+  academicYears?: AcademicYear[];
 }
 
 export type StatusValue =
@@ -298,7 +327,8 @@ export type StatusValue =
   | "suspended"
   | "rejected"
   | "info"
-  | "important" | "urgent"
+  | "important"
+  | "urgent";
 
 export interface PortalInfo {
   role: RoleName;
