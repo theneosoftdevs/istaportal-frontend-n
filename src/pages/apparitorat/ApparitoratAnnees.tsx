@@ -89,12 +89,14 @@ export function ApparitoratAnnees() {
     {
       key: "start_date",
       header: "Début",
-      render: (y) => (y.start_date ? new Date(y.start_date).toLocaleDateString() : "—"),
+      render: (y) =>
+        y.start_date ? new Date(y.start_date).toLocaleDateString() : "—",
     },
     {
       key: "end_date",
       header: "Fin",
-      render: (y) => (y.end_date ? new Date(y.end_date).toLocaleDateString() : "—"),
+      render: (y) =>
+        y.end_date ? new Date(y.end_date).toLocaleDateString() : "—",
     },
     {
       key: "is_active",
@@ -112,8 +114,11 @@ export function ApparitoratAnnees() {
     const rows = toArray(historiesQuery.data);
 
     return rows.map((h: any, index: number) => {
-      const studentId = h.student_id || h.student?.id || h.student?.user_id || "";
-      const student = students.find((s) => s.id === studentId || s.user_id === studentId);
+      const studentId =
+        h.student_id || h.student?.id || h.student?.user_id || "";
+      const student = students.find(
+        (s) => s.id === studentId || s.user_id === studentId,
+      );
 
       const fullNameFromStudent = [
         student?.first_name,
@@ -136,7 +141,8 @@ export function ApparitoratAnnees() {
         .join(" ")
         .trim();
 
-      const promotionId = h.promotion_id || h.promotion?.id || student?.promotion_id || "";
+      const promotionId =
+        h.promotion_id || h.promotion?.id || student?.promotion_id || "";
       const facultyId =
         h.faculty_id ||
         h.faculty?.id ||
@@ -144,13 +150,20 @@ export function ApparitoratAnnees() {
         student?.faculty_id ||
         "";
       const yearId =
-        h.academic_year_id || h.academic_year?.id || student?.academic_year_id || "";
+        h.academic_year_id ||
+        h.academic_year?.id ||
+        student?.academic_year_id ||
+        "";
 
       const promotionName =
-        h.promotion?.name || promotions.find((p) => p.id === promotionId)?.name || "—";
+        h.promotion?.name ||
+        promotions.find((p) => p.id === promotionId)?.name ||
+        "—";
 
       const facultyName =
-        h.faculty?.code || faculties.find((f) => f.id === facultyId)?.code || "—";
+        h.faculty?.code ||
+        faculties.find((f) => f.id === facultyId)?.code ||
+        "—";
 
       const yearName =
         h.academic_year?.display_name ||
@@ -162,7 +175,8 @@ export function ApparitoratAnnees() {
       return {
         id: String(h.id || `${studentId}-${yearId}-${index}`),
         studentName: fullNameFromStudent || fullNameFromHistory || "—",
-        matricule: student?.matricule || h.student?.matricule || h.student?.code || "—",
+        matricule:
+          student?.matricule || h.student?.matricule || h.student?.code || "—",
         faculty: facultyName,
         promotion: promotionName,
         year: yearName,
@@ -176,7 +190,9 @@ export function ApparitoratAnnees() {
     {
       key: "matricule",
       header: "Matricule",
-      render: (row) => <span className="font-mono text-xs">{row.matricule}</span>,
+      render: (row) => (
+        <span className="font-mono text-xs">{row.matricule}</span>
+      ),
     },
     { key: "faculty", header: "Faculté" },
     { key: "promotion", header: "Promotion" },
@@ -252,7 +268,10 @@ export function ApparitoratAnnees() {
           </h3>
         </div>
 
-        <form onSubmit={onCreateAcademicYear} className="grid grid-cols-1 gap-3 md:grid-cols-5">
+        <form
+          onSubmit={onCreateAcademicYear}
+          className="grid grid-cols-1 gap-3 md:grid-cols-5"
+        >
           <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -280,20 +299,33 @@ export function ApparitoratAnnees() {
               <SelectItem value="yes">Créer et activer</SelectItem>
             </SelectContent>
           </Select>
-          <Button type="submit" disabled={creating} className="w-full md:w-auto">
+          <Button
+            type="submit"
+            disabled={creating}
+            className="w-full md:w-auto"
+          >
             {creating ? "Création..." : "Créer"}
           </Button>
         </form>
       </div>
 
-      <DataTable
-        columns={yearColumns}
-        data={academicYears}
-        rowKey={(y) => y.id}
-        loading={yearsQuery.isLoading}
-        emptyTitle="Aucune année académique"
-        emptyDescription="Créez une année académique pour démarrer le suivi annuel."
-      />
+      <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <History className="size-4 text-primary" />
+          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+            Années académiques
+          </h3>
+        </div>
+
+        <DataTable
+          columns={yearColumns}
+          data={academicYears}
+          rowKey={(y) => y.id}
+          loading={yearsQuery.isLoading}
+          emptyTitle="Aucune année académique"
+          emptyDescription="Créez une année académique pour démarrer le suivi annuel."
+        />
+      </div>
 
       <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
